@@ -9,7 +9,7 @@ export default function Page() {
           Join AgriBridge
         </h1>
         <p className="text-sm text-gray-500 text-center mt-1">
-          Create your free account
+          Create your account
         </p>
 
         {/* Form */}
