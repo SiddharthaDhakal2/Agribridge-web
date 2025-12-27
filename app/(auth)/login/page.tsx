@@ -34,7 +34,7 @@ export default function Page() {
                     <Link href="/dashboard">
                         <button
                             type="button"
-                            className="w-full mt-2 rounded-lg bg-indigo-600 py-2.5 text-white font-semibold hover:bg-indigo-700 transition"
+                            className="w-full mt-2 rounded-lg bg-green-600 py-2.5 text-white font-semibold hover:bg-green-700 transition"
                         >
                             Login
                         </button>
@@ -44,7 +44,7 @@ export default function Page() {
 
                 <p className="text-sm text-center text-gray-600 mt-6">
                     Don’t have an account?{" "}
-                    <a href="/signup" className="text-indigo-600 font-medium">
+                    <a href="/signup" className="text-green-600 font-medium">
                         Sign up
                     </a>
                 </p>
