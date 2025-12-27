@@ -41,6 +41,15 @@ export default function Page() {
             />
           </div>
 
+          <div>
+            <label className="text-sm text-gray-700">Confirm Password</label>
+            <input
+              type="confirm password"
+              placeholder="••••••••"
+              className="mt-1 w-full rounded-lg border px-3 py-2 text-gray-700 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
           <button
             type="submit"
             className="w-full mt-2 rounded-lg bg-green-600 py-2.5 text-white font-semibold hover:bg-green-700 transition"
