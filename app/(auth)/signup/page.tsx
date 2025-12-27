@@ -43,16 +43,16 @@ export default function Page() {
 
           <button
             type="submit"
-            className="w-full mt-2 rounded-lg bg-indigo-600 py-2.5 text-white font-semibold hover:bg-indigo-700 transition"
+            className="w-full mt-2 rounded-lg bg-green-600 py-2.5 text-white font-semibold hover:bg-green-700 transition"
           >
-            Create Account
+            Signup
           </button>
         </form>
 
         {/* Footer */}
         <p className="text-sm text-center text-gray-600 mt-6">
           Already have an account?{" "}
-          <a href="/login" className="text-indigo-600 font-medium">
+          <a href="/login" className="text-green-600 font-medium">
             Login
           </a>
         </p>
