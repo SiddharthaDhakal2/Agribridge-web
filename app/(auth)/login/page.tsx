@@ -4,18 +4,16 @@ import LoginForm from "../_components/LoginForm";
 
 export default function LoginPage() {
   return (
-    <main className="relative h-screen w-screen overflow-hidden to-black">
-      <div className="absolute inset-0 bg-black/60" />
-
-      <div className="relative h-full grid place-items-center p-4 pt-20">
-        <section className="w-full max-w-md rounded-xl border border-white/15 bg-black/40 backdrop-blur p-6 text-white">
-          <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-sm text-white/70 mt-1 mb-6">
-            Sign in to continue
+    <div className="w-full max-w-md mx-auto px-4">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
+          <p className="text-gray-600 mt-2">
+            Sign in to continue to Agribridge
           </p>
-          <LoginForm />
-        </section>
+        </div>
+        <LoginForm />
       </div>
-    </main>
+    </div>
   );
 }
