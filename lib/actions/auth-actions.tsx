@@ -53,3 +53,23 @@ export const handleLogin = async (formData: { email: string; password: string })
     };
   }
 };
+
+export const handleLogout = async () => {
+  try {
+    const cookieStore = await cookies();
+    
+    cookieStore.delete("token");
+    cookieStore.delete("user");
+    cookieStore.delete("role");
+
+    return {
+      success: true,
+      message: "Logged out successfully",
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Something went wrong",
+    };
+  }
+};
