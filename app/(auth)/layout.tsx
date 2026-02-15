@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Header from "../(navigation)/Header";
 
 export default function AuthLayout({
   children,
@@ -6,8 +7,11 @@ export default function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      {children}
-    </main>
+    <>
+      <Header />
+      <main className="min-h-screen flex items-center justify-center bg-white pt-16">
+        {children}
+      </main>
+    </>
   );
 }
