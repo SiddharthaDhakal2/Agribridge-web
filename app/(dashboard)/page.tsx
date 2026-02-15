@@ -1,36 +1,162 @@
 import Link from "next/link";
 
-export default function Dashboard() {
+export default function HomePage() {
   return (
-    <main className="relative min-h-screen bg-white">
-      {/* Content */}
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-6 text-center">
-
-        <h1 className="mb-4 text-4xl font-bold md:text-6xl text-gray-900">
-          Fresh Agriculture <span className="text-green-700">Products</span>
-        </h1>
-
-        <p className="mb-8 max-w-xl text-gray-600">
-          Buy fresh, organic agricultural products directly from farmers. Quality guaranteed, competitive prices.
-        </p>
-
-        <div className="flex gap-4">
-          <Link
-            href="/home"
-            className="rounded-md bg-green-700 px-6 py-3 text-sm font-semibold text-white hover:bg-green-800 transition"
-          >
-            Browse Products
-          </Link>
-
-          <Link
-            href="/login"
-            className="rounded-md border border-green-700 text-green-700 px-6 py-3 text-sm font-semibold hover:bg-green-50 transition"
-          >
-            Learn More
-          </Link>
+    <main className="w-full bg-white">
+      {/* Hero Section */}
+      <section className="relative bg-linear-to-br from-green-50 via-white to-green-50 py-20 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="inline-block mb-4 px-4 py-2 bg-green-100 rounded-full">
+            <span className="text-green-700 text-sm font-semibold">🌱 Fresh from Farm to Table</span>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            Quality Agriculture Products<br />
+            <span className="text-green-600">at Your Doorstep</span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+            Connect with local farmers and get fresh, organic produce delivered to your home. 
+            Support sustainable farming while enjoying the best quality products.
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Link href="/home" className="bg-green-700 text-white px-8 py-4 rounded-xl font-semibold hover:bg-green-800 transition shadow-lg hover:shadow-xl">
+              Browse Products
+            </Link>
+            <Link href="/about" className="bg-white text-green-700 px-8 py-4 rounded-xl font-semibold border-2 border-green-700 hover:bg-green-50 transition">
+              Learn More
+            </Link>
+          </div>
         </div>
+      </section>
 
-      </div>
+      {/* Features Section */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose Agribridge?</h2>
+            <p className="text-lg text-gray-600">Everything you need for fresh, quality produce</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-linear-to-br from-green-50 to-emerald-50 rounded-2xl p-8 text-center hover:shadow-xl transition transform hover:-translate-y-1">
+              <div className="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">🌾</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">100% Organic</h3>
+              <p className="text-gray-600">
+                All our products are certified organic, grown without harmful pesticides or chemicals.
+              </p>
+            </div>
+
+            <div className="bg-linear-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 text-center hover:shadow-xl transition transform hover:-translate-y-1">
+              <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">⚡</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Fast Delivery</h3>
+              <p className="text-gray-600">
+                Same-day delivery available. Get your fresh produce while it is at its peak freshness.
+              </p>
+            </div>
+
+            <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-2xl p-8 text-center hover:shadow-xl transition transform hover:-translate-y-1">
+              <div className="w-16 h-16 bg-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">💰</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Fair Prices</h3>
+              <p className="text-gray-600">
+                Direct from farmers means better prices for you and fair compensation for them.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Popular Categories</h2>
+            <p className="text-lg text-gray-600">Explore our wide range of fresh products</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition cursor-pointer">
+              <div className="h-48 bg-linear-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                <span className="text-7xl">🥬</span>
+              </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Fresh Vegetables</h3>
+                <p className="text-gray-600 mb-4">Farm-fresh greens, tomatoes, peppers & more</p>
+                <div className="flex items-center text-green-700 font-semibold">
+                  <span>Explore</span>
+                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition cursor-pointer">
+              <div className="h-48 bg-linear-to-br from-red-400 to-pink-500 flex items-center justify-center">
+                <span className="text-7xl">🍎</span>
+              </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Fresh Fruits</h3>
+                <p className="text-gray-600 mb-4">Seasonal fruits, berries, and tropical delights</p>
+                <div className="flex items-center text-green-700 font-semibold">
+                  <span>Explore</span>
+                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition cursor-pointer">
+              <div className="h-48 bg-linear-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                <span className="text-7xl">🌾</span>
+              </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Grains & Cereals</h3>
+                <p className="text-gray-600 mb-4">Wholesome grains, rice, wheat & pulses</p>
+                <div className="flex items-center text-green-700 font-semibold">
+                  <span>Explore</span>
+                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Section */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-linear-to-r from-green-600 to-emerald-600 rounded-3xl p-12 text-center text-white">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Join Thousands of Happy Customers</h2>
+            <p className="text-xl mb-8 text-green-50 max-w-2xl mx-auto">
+              Experience the difference of farm-fresh quality. Start your journey to healthier, 
+              tastier food today.
+            </p>
+            <div className="grid md:grid-cols-4 gap-8 mb-8">
+              <div>
+                <div className="text-4xl font-bold mb-2">500+</div>
+                <p className="text-green-100">Farmers</p>
+              </div>
+              <div>
+                <div className="text-4xl font-bold mb-2">10K+</div>
+                <p className="text-green-100">Customers</p>
+              </div>
+              <div>
+                <div className="text-4xl font-bold mb-2">50+</div>
+                <p className="text-green-100">Products</p>
+              </div>
+              <div>
+                <div className="text-4xl font-bold mb-2">100%</div>
+                <p className="text-green-100">Organic</p>
+              </div>
+            </div>
+            <Link href="/register" className="inline-block bg-white text-green-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition shadow-lg">
+              Get Started Now
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
