@@ -35,13 +35,13 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="name">
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700" htmlFor="name">
           Name
         </label>
         <input
           id="name"
-          className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+          className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
           {...register("name")}
           placeholder="Your name"
         />
@@ -50,14 +50,14 @@ export default function RegisterForm() {
         )}
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="email">
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700" htmlFor="email">
           Email
         </label>
         <input
           id="email"
           type="email"
-          className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+          className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
           {...register("email")}
           placeholder="you@example.com"
         />
@@ -66,14 +66,14 @@ export default function RegisterForm() {
         )}
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="password">
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700" htmlFor="password">
           Password
         </label>
         <input
           id="password"
           type="password"
-          className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+          className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
           {...register("password")}
           placeholder="••••••"
         />
@@ -82,14 +82,14 @@ export default function RegisterForm() {
         )}
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="confirmPassword">
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700" htmlFor="confirmPassword">
           Confirm Password
         </label>
         <input
           id="confirmPassword"
           type="password"
-          className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+          className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
           {...register("confirmPassword")}
           placeholder="••••••"
         />
@@ -101,14 +101,14 @@ export default function RegisterForm() {
       <button
         type="submit"
         disabled={isSubmitting || pending}
-        className="h-10 w-full rounded-md bg-foreground text-background text-sm font-semibold hover:opacity-90 disabled:opacity-60"
+        className="mt-6 h-11 w-full rounded-lg bg-green-700 text-white text-sm font-semibold hover:bg-green-800 disabled:opacity-60 disabled:cursor-not-allowed transition"
       >
         {isSubmitting || pending ? "Creating account..." : "Create account"}
       </button>
 
-      <div className="mt-1 text-center text-sm">
+      <div className="mt-4 text-center text-sm text-gray-600">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold hover:underline">
+        <Link href="/login" className="font-semibold text-green-700 hover:text-green-800 hover:underline">
           Log in
         </Link>
       </div>

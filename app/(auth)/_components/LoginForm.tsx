@@ -30,7 +30,7 @@ export default function LoginForm() {
         const role = res.data?.role;
 
         if (role === "admin") {
-          router.replace("/admin/users");
+          router.replace("/admin");
         } else {
           router.replace("/home"); 
         }
@@ -44,51 +44,51 @@ export default function LoginForm() {
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
       {/* Email */}
       <div className="space-y-2">
-        <label className="text-xs font-medium" htmlFor="email">
+        <label className="text-sm font-medium text-gray-700" htmlFor="email">
           Email
         </label>
         <input
           id="email"
           type="email"
           autoComplete="email"
-          className="h-10 w-full rounded-md border border-white/30 bg-white/10 px-3 text-sm text-white outline-none placeholder-white/60 focus:border-white/50 focus:bg-white/20"
+          className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
           {...register("email")}
           placeholder="you@example.com"
         />
         {errors.email?.message && (
-          <p className="text-[11px] text-red-600">{errors.email.message}</p>
+          <p className="text-xs text-red-600">{errors.email.message}</p>
         )}
       </div>
 
       {/* Password */}
       <div className="space-y-2">
-        <label className="text-xs font-medium" htmlFor="password">
+        <label className="text-sm font-medium text-gray-700" htmlFor="password">
           Password
         </label>
         <input
           id="password"
           type="password"
           autoComplete="current-password"
-          className="h-10 w-full rounded-md border border-white/30 bg-white/10 px-3 text-sm text-white outline-none placeholder-white/60 focus:border-white/50 focus:bg-white/20"
+          className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-900 outline-none placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
           {...register("password")}
           placeholder="••••••"
         />
         {errors.password?.message && (
-          <p className="text-[11px] text-red-600">{errors.password.message}</p>
+          <p className="text-xs text-red-600">{errors.password.message}</p>
         )}
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting || pending}
-        className="mt-2 h-10 w-full rounded-md bg-foreground text-background text-sm font-semibold hover:opacity-90 disabled:opacity-60"
+        className="mt-6 h-11 w-full rounded-lg bg-green-700 text-white text-sm font-semibold hover:bg-green-800 disabled:opacity-60 disabled:cursor-not-allowed transition"
       >
         {isSubmitting || pending ? "Logging in..." : "Log in"}
       </button>
 
-      <div className="mt-2 text-center text-xs">
+      <div className="mt-4 text-center text-sm text-gray-600">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-semibold hover:underline">
+        <Link href="/register" className="font-semibold text-green-700 hover:text-green-800 hover:underline">
           Sign up
         </Link>
       </div>
