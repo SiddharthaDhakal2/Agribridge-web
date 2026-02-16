@@ -7,8 +7,12 @@ export function middleware(req: NextRequest) {
   const token = req.cookies.get("token")?.value;
   const role = req.cookies.get("role")?.value;
 
-  if (pathname.startsWith("/user")) {
-    if (!token) {
+  if (
+    pathname.startsWith("/user") ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/products")
+  ) {
+    if (!token || !role) {
       const url = req.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
@@ -33,5 +37,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/user/:path*"],
+  matcher: ["/admin/:path*", "/user/:path*", "/profile/:path*", "/products", "/products/:path*"],
 };
