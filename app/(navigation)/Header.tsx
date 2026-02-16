@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { handleLogout as serverHandleLogout } from "@/lib/actions/auth-actions";
 
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -32,11 +35,11 @@ export default function Header() {
   }, [pathname]);
 
   const handleLogout = () => {
-    // Clear cookies by setting them to empty
-    document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    setIsLoggedIn(false);
-    router.push("/login");
+    startTransition(async () => {
+      await serverHandleLogout();
+      setIsLoggedIn(false);
+      router.push("/login");
+    });
   };
 
   return (
@@ -44,8 +47,15 @@ export default function Header() {
       <div className="flex h-16 items-center justify-between px-8">
 
         {/* Logo - Left Side */}
-        <Link href="/" className="font-bold text-xl text-green-700">
-          Agribridge
+        <Link href="/" className="flex items-center gap-2">
+          <Image 
+            src="/agri_logo.png" 
+            alt="Agribridge Logo" 
+            width={40} 
+            height={40}
+            className="object-contain"
+          />
+          <span className="font-bold text-xl text-green-700">AgriBridge</span>
         </Link>
 
         {/* Navigation Links - Right Side */}
@@ -58,20 +68,29 @@ export default function Header() {
           </Link>
           {isLoggedIn ? (
             <>
-              <Link href="/user/profile" className="text-gray-700 font-medium hover:text-green-700 transition">
+              <Link href="/cart" className="text-gray-700 font-medium hover:text-green-700 transition">
+                Cart
+              </Link>
+              <Link href="/profile" className="text-gray-700 font-medium hover:text-green-700 transition">
                 Profile
               </Link>
               <button
                 onClick={handleLogout}
+                disabled={isPending}
                 className="text-gray-700 font-medium hover:text-green-700 transition cursor-pointer"
               >
                 Logout
               </button>
             </>
           ) : (
-            <Link href="/login" className="text-gray-700 font-medium hover:text-green-700 transition">
-              Login
-            </Link>
+            <>
+              <Link href="/register" className="text-gray-700 font-medium hover:text-green-700 transition">
+                Signup
+              </Link>
+              <Link href="/login" className="text-gray-700 font-medium hover:text-green-700 transition">
+                Login
+              </Link>
+            </>
           )}
         </nav>
 
