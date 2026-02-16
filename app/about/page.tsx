@@ -123,9 +123,6 @@ export default function AboutPage() {
           <p className="text-lg text-gray-600 mb-8">
             Be part of a movement that supports local farmers and promotes healthy, sustainable living.
           </p>
-          <button className="bg-green-700 text-white px-8 py-4 rounded-lg font-semibold hover:bg-green-800 transition">
-            Get Started Today
-          </button>
         </div>
       </section>
     </main>
