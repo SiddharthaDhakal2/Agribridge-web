@@ -15,10 +15,51 @@ interface ProfileFormProps {
 }
 
 export default function ProfileForm({ user }: ProfileFormProps) {
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  // Load saved profile data from localStorage on mount
+  const [name, setName] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("profileData");
+      if (saved) {
+        const data = JSON.parse(saved);
+        return data.name || user.name;
+      }
+    }
+    return user.name;
+  });
+  
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("profileData");
+      if (saved) {
+        const data = JSON.parse(saved);
+        return data.email || user.email;
+      }
+    }
+    return user.email;
+  });
+  
+  const [phone, setPhone] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("profileData");
+      if (saved) {
+        const data = JSON.parse(saved);
+        return data.phone || "";
+      }
+    }
+    return "";
+  });
+  
+  const [address, setAddress] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("profileData");
+      if (saved) {
+        const data = JSON.parse(saved);
+        return data.address || "";
+      }
+    }
+    return "";
+  });
+  
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -28,7 +69,12 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSaveChanges = () => {
-    console.log("Saving changes:", { name, email, phone, address });
+    const profileData = { name, email, phone, address };
+    console.log("Saving changes:", profileData);
+    // Save to localStorage for cart page to use
+    if (typeof window !== "undefined") {
+      localStorage.setItem("profileData", JSON.stringify(profileData));
+    }
     // Add your save logic here
   };
 
