@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Package, Warehouse, ShoppingBag, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,8 +39,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Sidebar */}
         <aside className="w-64 bg-green-900 text-white min-h-screen p-6 fixed left-0 top-0 overflow-y-auto">
           <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-2xl">🌾</span>
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+              <Image src="/agri_logo.png" alt="AgriBridge Logo" width={40} height={40} className="object-contain" />
             </div>
             <div>
               <div className="text-white font-semibold">AgriBridge</div>
@@ -71,7 +72,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <Button 
               onClick={onLogout}
               variant="outline" 
-              className="w-full bg-green-100! border-green-700 text-green-900 hover:bg-green-800 hover:text-white"
+              className="w-full bg-green-100! border-green-700 text-green-900 hover:bg-green-800 hover:text-black"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout

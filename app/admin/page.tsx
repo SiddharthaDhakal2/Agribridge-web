@@ -1,6 +1,6 @@
 'use client';
 
-import { Package, ShoppingBag, DollarSign } from 'lucide-react';
+import { Package, ShoppingBag } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { orders, products } from '@/lib/mockData';
 
@@ -15,7 +15,8 @@ export default function AdminDashboard() {
     {
       label: 'Total Revenue',
       value: `Rs ${totalRevenue.toFixed(2)}`,
-      icon: DollarSign,
+      icon: null,
+      customIcon: 'Rs',
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
@@ -51,7 +52,11 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                    <Icon className={`w-6 h-6 ${stat.color}`} />
+                    {stat.customIcon ? (
+                      <span className={`text-xl font-bold ${stat.color}`}>{stat.customIcon}</span>
+                    ) : Icon ? (
+                      <Icon className={`w-6 h-6 ${stat.color}`} />
+                    ) : null}
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
