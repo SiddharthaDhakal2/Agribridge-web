@@ -71,6 +71,9 @@ export default function Header() {
               <Link href="/cart" className="text-gray-700 font-medium hover:text-green-700 transition">
                 Cart
               </Link>
+              <Link href="/orders" className="text-gray-700 font-medium hover:text-green-700 transition">
+                Orders
+              </Link>
               <Link href="/profile" className="text-gray-700 font-medium hover:text-green-700 transition">
                 Profile
               </Link>
