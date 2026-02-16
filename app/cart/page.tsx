@@ -13,6 +13,13 @@ interface CartItem {
   quantity: number;
 }
 
+interface DeliveryInfo {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     if (typeof window === "undefined") return [];
@@ -84,6 +91,58 @@ export default function CartPage() {
   const deliveryFee = 5.0;
   const subtotal = calculateSubtotal();
   const total = subtotal + deliveryFee;
+
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+
+  // Load profile data when proceeding to checkout
+  const handleProceedToCheckout = () => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("profileData");
+      if (saved) {
+        const profileData = JSON.parse(saved);
+        setDeliveryInfo({
+          name: profileData.name || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+          address: profileData.address || "",
+        });
+      }
+    }
+    setShowCheckout(true);
+  };
+
+  const handleDeliveryInfoChange = (
+    field: keyof DeliveryInfo,
+    value: string
+  ) => {
+    setDeliveryInfo((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmitOrder = () => {
+    if (
+      deliveryInfo.name &&
+      deliveryInfo.email &&
+      deliveryInfo.phone &&
+      deliveryInfo.address
+    ) {
+      alert(
+        `Order placed successfully! \n\nDelivery to: ${deliveryInfo.name}`
+      );
+      setShowCheckout(false);
+      setDeliveryInfo({ name: "", email: "", phone: "", address: "" });
+    } else {
+      alert("Please fill in all delivery information fields.");
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -208,42 +267,161 @@ export default function CartPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-2xl shadow-md p-6 h-fit sticky top-24">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Order Summary
-            </h2>
+          {cartItems.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-md p-6 h-fit sticky top-24">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Order Summary
+              </h2>
 
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-between text-gray-700">
-                <span className="font-medium">Subtotal</span>
-                <span className="font-bold">
-                  Rs {subtotal.toFixed(2)}
-                </span>
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between text-black">
+                  <span className="font-medium">Subtotal</span>
+                  <span className="font-bold text-black">
+                    Rs {subtotal.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-black">
+                  <span className="font-medium">Delivery Fee</span>
+                  <span className="font-bold text-black">
+                    Rs {deliveryFee.toFixed(2)}
+                  </span>
+                </div>
+                <div className="border-t-2 pt-4 flex justify-between text-lg font-bold text-green-600">
+                  <span>Total</span>
+                  <span>Rs {total.toFixed(2)}</span>
+                </div>
               </div>
-              <div className="flex justify-between text-gray-700">
-                <span className="font-medium">Delivery Fee</span>
-                <span className="font-bold">
-                  Rs {deliveryFee.toFixed(2)}
-                </span>
+
+              <button 
+                onClick={handleProceedToCheckout}
+                className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition mb-3 shadow-md hover:shadow-lg">
+                Proceed to Checkout
+              </button>
+              <Link
+                href="/products"
+                className="block w-full text-center bg-white border-2 border-gray-300 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-50 transition"
+              >
+                Continue Shopping
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Checkout Modal */}
+      {showCheckout && (
+        <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Delivery Information
+              </h2>
+              <button
+                onClick={() => setShowCheckout(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              {/* Name Field - Read-only from profile */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Full Name <span className="text-gray-500 text-xs">(from profile)</span>
+                </label>
+                <input
+                  type="text"
+                  value={deliveryInfo.name}
+                  readOnly
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
               </div>
-              <div className="border-t-2 pt-4 flex justify-between text-lg font-bold text-green-600">
-                <span>Total</span>
-                <span>Rs {total.toFixed(2)}</span>
+
+              {/* Email Field - Read-only from profile */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Email Address <span className="text-gray-500 text-xs">(from profile)</span>
+                </label>
+                <input
+                  type="email"
+                  value={deliveryInfo.email}
+                  readOnly
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              </div>
+
+              {/* Phone Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={deliveryInfo.phone}
+                  onChange={(e) =>
+                    handleDeliveryInfoChange("phone", e.target.value)
+                  }
+                  placeholder="Enter your phone number"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 bg-gray-50 text-gray-600"
+                />
+              </div>
+
+              {/* Address Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Delivery Address
+                </label>
+                <textarea
+                  value={deliveryInfo.address}
+                  onChange={(e) =>
+                    handleDeliveryInfoChange("address", e.target.value)
+                  }
+                  placeholder="Enter your delivery address"
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 bg-gray-50 text-gray-600"
+                />
               </div>
             </div>
 
-            <button className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition mb-3 shadow-md hover:shadow-lg">
-              Proceed to Checkout
-            </button>
-            <Link
-              href="/products"
-              className="block w-full text-center bg-white border-2 border-gray-300 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-50 transition"
-            >
-              Continue Shopping
-            </Link>
+            {/* Order Total */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+              <div className="flex justify-between mb-2">
+                <span className="text-black font-medium">Subtotal</span>
+                <span className="font-semibold text-black">Rs {subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between mb-3">
+                <span className="text-black font-medium">Delivery Fee</span>
+                <span className="font-semibold text-black">Rs {deliveryFee.toFixed(2)}</span>
+              </div>
+              <div className="border-t pt-3 flex justify-between">
+                <span className="font-bold text-green-600">Total</span>
+                <span className="font-bold text-green-600 text-lg">
+                  Rs {total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleSubmitOrder}
+                className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hover:shadow-lg"
+              >
+                Place Order
+              </button>
+              <button
+                onClick={() => setShowCheckout(false)}
+                className="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </main>
   );
 }
