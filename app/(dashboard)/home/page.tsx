@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HomePage() {
   return (
@@ -18,7 +19,7 @@ export default function HomePage() {
             Support sustainable farming while enjoying the best quality products.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/home" className="bg-green-700 text-white px-8 py-4 rounded-xl font-semibold hover:bg-green-800 transition shadow-lg hover:shadow-xl">
+            <Link href="/products" className="bg-green-700 text-white px-8 py-4 rounded-xl font-semibold hover:bg-green-800 transition shadow-lg hover:shadow-xl">
               Browse Products
             </Link>
             <Link href="/about" className="bg-white text-green-700 px-8 py-4 rounded-xl font-semibold border-2 border-green-700 hover:bg-green-50 transition">
@@ -80,44 +81,47 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition cursor-pointer">
-              <div className="h-48 bg-linear-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-                <span className="text-7xl">🥬</span>
+              <div className="h-48 relative overflow-hidden">
+                <Image 
+                  src="/vegetable.jpg" 
+                  alt="Fresh Vegetables"
+                  fill
+                  className="object-cover"
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Fresh Vegetables</h3>
                 <p className="text-gray-600 mb-4">Farm-fresh greens, tomatoes, peppers & more</p>
-                <div className="flex items-center text-green-700 font-semibold">
-                  <span>Explore</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
-                </div>
               </div>
             </div>
 
             <div className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition cursor-pointer">
-              <div className="h-48 bg-linear-to-br from-red-400 to-pink-500 flex items-center justify-center">
-                <span className="text-7xl">🍎</span>
+              <div className="h-48 relative overflow-hidden">
+                <Image 
+                  src="/fruits.jpg" 
+                  alt="Fresh Fruits"
+                  fill
+                  className="object-cover"
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Fresh Fruits</h3>
                 <p className="text-gray-600 mb-4">Seasonal fruits, berries, and tropical delights</p>
-                <div className="flex items-center text-green-700 font-semibold">
-                  <span>Explore</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
-                </div>
               </div>
             </div>
 
             <div className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition cursor-pointer">
-              <div className="h-48 bg-linear-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
-                <span className="text-7xl">🌾</span>
+              <div className="h-48 relative overflow-hidden">
+                <Image 
+                  src="/grains.jpg" 
+                  alt="Grains & Cereals"
+                  fill
+                  className="object-cover"
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Grains & Cereals</h3>
                 <p className="text-gray-600 mb-4">Wholesome grains, rice, wheat & pulses</p>
-                <div className="flex items-center text-green-700 font-semibold">
-                  <span>Explore</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
-                </div>
               </div>
             </div>
           </div>
