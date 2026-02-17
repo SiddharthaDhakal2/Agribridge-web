@@ -22,6 +22,7 @@ export interface RegisterResponse {
     name: string;
     email: string;
     role: "user" | "admin";
+    image?: string;
   };
 }
 
@@ -34,7 +35,31 @@ export interface LoginResponse {
     name: string;
     email: string;
     role: "user" | "admin";
+    phone?: string;
+    address?: string;
+    image?: string;
+  };
+}
 
+export interface UpdateProfileData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  image?: File;
+}
+
+export interface UpdateProfileResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    name: string;
+    email: string;
+    role: "user" | "admin";
+    phone?: string;
+    address?: string;
+    image?: string;
   };
 }
 
@@ -61,6 +86,64 @@ export const loginUser = async (data: LoginFormData): Promise<LoginResponse> => 
     return res.data;
   } catch (err: unknown) {
     let message = "Login failed";
+
+    if (err instanceof AxiosError && err.response) {
+      message = err.response.data?.message || message;
+    } else if (err instanceof Error) {
+      message = err.message;
+    }
+
+    throw new Error(message);
+  }
+};
+
+export const updateProfile = async (userId: string, data: FormData): Promise<UpdateProfileResponse> => {
+  try {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const res = await axiosInstance.put<UpdateProfileResponse>(`${API.AUTH.UPDATE_PROFILE}/${userId}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (err: unknown) {
+    let message = "Profile update failed";
+
+    if (err instanceof AxiosError && err.response) {
+      message = err.response.data?.message || message;
+    } else if (err instanceof Error) {
+      message = err.message;
+    }
+
+    throw new Error(message);
+  }
+};
+
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export const changePassword = async (userId: string, data: ChangePasswordData): Promise<ChangePasswordResponse> => {
+  try {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const res = await axiosInstance.put<ChangePasswordResponse>(
+      `${API.AUTH.CHANGE_PASSWORD}/${userId}`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return res.data;
+  } catch (err: unknown) {
+    let message = "Password change failed";
 
     if (err instanceof AxiosError && err.response) {
       message = err.response.data?.message || message;
