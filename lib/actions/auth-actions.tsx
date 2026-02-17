@@ -45,6 +45,7 @@ export const handleLogin = async (formData: { email: string; password: string })
       success: true,
       message: res.message,
       data: res.data,
+      token: res.token, // Return token to be stored in localStorage
     };
   } catch (err: unknown) {
     return {
