@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createOrder } from "@/lib/api/orders";
 import { getProducts } from "@/lib/api/products";
+import { useToast } from "@/components/ui/toast";
 
 interface CartItem {
   id: string;
@@ -16,6 +17,58 @@ interface CartItem {
   quantity: number;
 }
 
+interface RawCartItem {
+  id: string;
+  name: string;
+  farm: string;
+  image: string;
+  price: number;
+  unit: string;
+  quantity: number;
+}
+
+const getCartStorageKey = () => {
+  if (typeof window === "undefined") return "cartItems:guest";
+  try {
+    const rawUser = localStorage.getItem("user");
+    if (!rawUser) return "cartItems:guest";
+    const user = JSON.parse(rawUser) as { _id?: string };
+    if (user._id) return `cartItems:${user._id}`;
+  } catch {
+    return "cartItems:guest";
+  }
+  return "cartItems:guest";
+};
+
+const readStoredCartItems = () => {
+  if (typeof window === "undefined") return [] as RawCartItem[];
+  const readFromKey = (key: string) => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw) as RawCartItem[];
+    } catch {
+      return null;
+    }
+  };
+
+  const userKey = getCartStorageKey();
+  const userItems = readFromKey(userKey);
+  if (userItems) return userItems;
+
+  // Only migrate legacy items if user is NOT logged in (guest mode)
+  if (userKey === "cartItems:guest") {
+    const legacyItems = readFromKey("cartItems");
+    if (legacyItems) {
+      window.localStorage.setItem(userKey, JSON.stringify(legacyItems));
+      window.localStorage.removeItem("cartItems"); // Remove legacy key after migration
+      return legacyItems;
+    }
+  }
+
+  return [] as RawCartItem[];
+};
+
 interface DeliveryInfo {
   name: string;
   email: string;
@@ -25,38 +78,31 @@ interface DeliveryInfo {
 
 export default function CartPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = window.localStorage.getItem("cartItems");
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as {
-        id: string;
-        name: string;
-        farm: string;
-        image: string;
-        price: number;
-        unit: string;
-        quantity: number;
-      }[];
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-      return parsed.map((item) => ({
-        id: item.id,
-        name: item.name,
-        supplier: item.farm,
-        image: item.image,
-        pricePerKg: item.price,
-        quantity: item.quantity,
-      }));
+  useEffect(() => {
+    try {
+      const parsed = readStoredCartItems();
+      setCartItems(
+        parsed.map((item) => ({
+          id: item.id,
+          name: item.name,
+          supplier: item.farm,
+          image: item.image,
+          pricePerKg: item.price,
+          quantity: item.quantity,
+        }))
+      );
     } catch {
-      return [];
+      setCartItems([]);
     }
-  });
+  }, []);
 
   const persistCart = (items: CartItem[]) => {
     window.localStorage.setItem(
-      "cartItems",
+      getCartStorageKey(),
       JSON.stringify(
         items.map((item) => ({
           id: item.id,
@@ -198,7 +244,7 @@ export default function CartPage() {
     }
 
     if (cartItems.length === 0) {
-      alert("Your cart is empty");
+      showToast("Your cart is empty", "warning");
       return;
     }
 
@@ -259,12 +305,12 @@ export default function CartPage() {
       setDeliveryInfo({ name: "", email: "", phone: "", address: "" });
       setErrors({});
 
-      alert("Order placed successfully!");
+      showToast("Order placed successfully!", "success");
       router.push("/orders");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to place order";
-      alert(`Error placing order: ${errorMessage}`);
+      showToast(`Error placing order: ${errorMessage}`, "error");
     } finally {
       setIsSubmitting(false);
     }

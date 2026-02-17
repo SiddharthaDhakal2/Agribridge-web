@@ -17,12 +17,37 @@ type CartItem = {
 	quantity: number;
 };
 
+const getCartStorageKey = () => {
+	if (typeof window === "undefined") return "cartItems:guest";
+	try {
+		const rawUser = localStorage.getItem("user");
+		if (!rawUser) return "cartItems:guest";
+		const user = JSON.parse(rawUser) as { _id?: string };
+		if (user._id) return `cartItems:${user._id}`;
+	} catch {
+		return "cartItems:guest";
+	}
+	return "cartItems:guest";
+};
+
 const readCartItems = () => {
 	if (typeof window === "undefined") return [] as CartItem[];
 	try {
-		const raw = window.localStorage.getItem("cartItems");
-		if (!raw) return [];
-		return JSON.parse(raw) as CartItem[];
+		const userKey = getCartStorageKey();
+		const raw = window.localStorage.getItem(userKey);
+		if (raw) return JSON.parse(raw) as CartItem[];
+
+		// Only migrate legacy items if user is NOT logged in (guest mode)
+		if (userKey === "cartItems:guest") {
+			const legacyRaw = window.localStorage.getItem("cartItems");
+			if (legacyRaw) {
+				window.localStorage.setItem(userKey, legacyRaw);
+				window.localStorage.removeItem("cartItems"); // Remove legacy key after migration
+				return JSON.parse(legacyRaw) as CartItem[];
+			}
+		}
+
+		return [] as CartItem[];
 	} catch {
 		return [] as CartItem[];
 	}
@@ -30,7 +55,7 @@ const readCartItems = () => {
 
 const writeCartItems = (items: CartItem[]) => {
 	if (typeof window === "undefined") return;
-	window.localStorage.setItem("cartItems", JSON.stringify(items));
+	window.localStorage.setItem(getCartStorageKey(), JSON.stringify(items));
 };
 
 export default function ProductDetailPage() {

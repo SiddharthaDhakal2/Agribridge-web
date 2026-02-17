@@ -63,6 +63,8 @@ export const handleLogout = async () => {
     cookieStore.delete("user");
     cookieStore.delete("role");
 
+    // Note: Cart cleanup happens on client side (see logout handlers)
+    
     return {
       success: true,
       message: "Logged out successfully",
