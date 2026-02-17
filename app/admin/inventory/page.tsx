@@ -1,42 +1,70 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { products as initialProducts } from '@/lib/mockData';
-import type { Product } from '@/lib/mockData';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { getProducts, updateStock, Product } from '@/lib/api/products';
 
 export default function AdminInventory() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [adjustQuantity, setAdjustQuantity] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleAdjust = (productId: string, adjustment: number) => {
-    setProducts(products.map(p => {
-      if (p.id === productId) {
-        const newQuantity = Math.max(0, p.quantity + adjustment);
-        let newAvailability: Product['availability'] = p.availability;
-        
-        if (newQuantity === 0) {
-          newAvailability = 'out-of-stock';
-        } else if (newQuantity < 50) {
-          newAvailability = 'low-stock';
-        } else {
-          newAvailability = 'in-stock';
-        }
-        
-        return { ...p, quantity: newQuantity, availability: newAvailability };
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await getProducts();
+        setProducts(data);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to load products';
+        setError(msg);
+      } finally {
+        setIsLoading(false);
       }
-      return p;
-    }));
-    setAdjustQuantity({ ...adjustQuantity, [productId]: '' });
+    };
+
+    fetchProducts();
+  }, []);
+
+  const handleAdjust = async (productId: string, adjustment: number, isAdd: boolean) => {
+    try {
+      setIsUpdating(true);
+      const product = products.find(p => p._id === productId);
+      if (!product) return;
+
+      const newQuantity = Math.max(0, product.quantity + (isAdd ? adjustment : -adjustment));
+      
+      const updated = await updateStock(productId, newQuantity);
+      
+      setProducts(products.map(p => p._id === productId ? updated : p));
+      setAdjustQuantity({ ...adjustQuantity, [productId]: '' });
+      alert('Stock updated successfully');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to update stock';
+      alert(`Error: ${msg}`);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const totalStock = products.reduce((sum, p) => sum + p.quantity, 0);
   const outOfStockCount = products.filter(p => p.availability === 'out-of-stock').length;
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading inventory...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -78,7 +106,7 @@ export default function AdminInventory() {
           <h3 className="text-lg font-semibold text-gray-900">Stock Levels</h3>
         </CardHeader>
         <CardContent>
-          <div className="overflow-visible">
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
@@ -91,7 +119,7 @@ export default function AdminInventory() {
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={product._id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
@@ -130,20 +158,21 @@ export default function AdminInventory() {
                           type="number"
                           placeholder="Qty"
                           className="w-20 h-8 text-sm"
-                          value={adjustQuantity[product.id] || ''}
+                          value={adjustQuantity[product._id] || ''}
                           onChange={(e) => setAdjustQuantity({
                             ...adjustQuantity,
-                            [product.id]: e.target.value
+                            [product._id]: e.target.value
                           })}
+                          disabled={isUpdating}
                         />
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            const qty = parseInt(adjustQuantity[product.id] || '0');
-                            if (qty) handleAdjust(product.id, qty);
+                            const qty = parseInt(adjustQuantity[product._id] || '0');
+                            if (qty) handleAdjust(product._id, qty, true);
                           }}
-                          disabled={!adjustQuantity[product.id]}
+                          disabled={!adjustQuantity[product._id] || isUpdating}
                         >
                           Add
                         </Button>
@@ -151,10 +180,10 @@ export default function AdminInventory() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            const qty = parseInt(adjustQuantity[product.id] || '0');
-                            if (qty) handleAdjust(product.id, -qty);
+                            const qty = parseInt(adjustQuantity[product._id] || '0');
+                            if (qty) handleAdjust(product._id, qty, false);
                           }}
-                          disabled={!adjustQuantity[product.id]}
+                          disabled={!adjustQuantity[product._id] || isUpdating}
                         >
                           Remove
                         </Button>
