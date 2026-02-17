@@ -27,6 +27,16 @@ export default function LoginForm() {
       const res = await handleLogin(values);
 
       if (res.success) {
+        // Store token and user data in localStorage for client-side APIs
+        if (typeof window !== "undefined") {
+          if (res.token) {
+            localStorage.setItem("token", res.token);
+          }
+          if (res.data) {
+            localStorage.setItem("user", JSON.stringify(res.data));
+          }
+        }
+
         const role = res.data?.role;
 
         if (role === "admin") {
