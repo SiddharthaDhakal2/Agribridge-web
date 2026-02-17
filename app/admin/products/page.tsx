@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -9,15 +9,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { products as initialProducts } from '@/lib/mockData';
-import type { Product } from '@/lib/mockData';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { getProducts, createProduct, updateProduct as updateProductAPI, deleteProduct as deleteProductAPI, Product } from '@/lib/api/products';
 
 export default function AdminProducts() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
     name: string;
     category: Product['category'];
@@ -27,6 +29,8 @@ export default function AdminProducts() {
     availability: Product['availability'];
     description: string;
     supplier: string;
+    farm: string;
+    image: string;
   }>({
     name: '',
     category: 'vegetables',
@@ -35,8 +39,29 @@ export default function AdminProducts() {
     quantity: '',
     availability: 'in-stock',
     description: '',
-    supplier: ''
+    supplier: '',
+    farm: '',
+    image: ''
   });
+
+  // Fetch products on mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await getProducts();
+        setProducts(data);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to load products';
+        setError(msg);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleAdd = () => {
     setEditingProduct(null);
@@ -49,7 +74,9 @@ export default function AdminProducts() {
       quantity: '',
       availability: 'in-stock',
       description: '',
-      supplier: ''
+      supplier: '',
+      farm: '',
+      image: ''
     });
     setIsDialogOpen(true);
   };
@@ -65,14 +92,23 @@ export default function AdminProducts() {
       quantity: product.quantity.toString(),
       availability: product.availability,
       description: product.description,
-      supplier: product.supplier
+      supplier: product.supplier,
+      farm: product.farm,
+      image: product.image
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      setProducts(products.filter(p => p.id !== id));
+      try {
+        await deleteProductAPI(id);
+        setProducts(products.filter(p => p._id !== id));
+        alert('Product deleted successfully');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to delete product';
+        alert(`Error: ${msg}`);
+      }
     }
   };
 
@@ -82,41 +118,53 @@ export default function AdminProducts() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
+        setFormData(prev => ({ ...prev, image: reader.result as string }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    let productId: string;
-    if (editingProduct?.id) {
-      productId = editingProduct.id;
-    } else {
-      productId = `product-${crypto.randomUUID()}`;
-    }
-    
-    const newProduct: Product = {
-      id: productId,
-      name: formData.name,
-      category: formData.category,
-      price: parseFloat(formData.price),
-      unit: formData.unit,
-      quantity: parseInt(formData.quantity),
-      availability: formData.availability,
-      image: imagePreview || editingProduct?.image || 'https://via.placeholder.com/400',
-      description: formData.description,
-      supplier: formData.supplier
-    };
+    try {
+      setIsSubmitting(true);
+      
+      if (!formData.name || !formData.price || !formData.unit || !formData.quantity || !formData.supplier || !formData.farm || !formData.image) {
+        alert('Please fill in all required fields');
+        return;
+      }
 
-    if (editingProduct) {
-      setProducts(products.map(p => p.id === editingProduct.id ? newProduct : p));
-    } else {
-      setProducts([...products, newProduct]);
-    }
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        category: formData.category as 'vegetables' | 'fruits' | 'grains',
+        price: parseFloat(formData.price),
+        unit: formData.unit,
+        quantity: parseInt(formData.quantity),
+        image: formData.image,
+        supplier: formData.supplier,
+        farm: formData.farm,
+        availability: formData.availability as 'in-stock' | 'low-stock' | 'out-of-stock',
+      };
 
-    handleDialogChange(false);
+      if (editingProduct) {
+        const updated = await updateProductAPI(editingProduct._id, productData);
+        setProducts(products.map(p => p._id === editingProduct._id ? updated : p));
+        alert('Product updated successfully');
+      } else {
+        const created = await createProduct(productData);
+        setProducts([...products, created]);
+        alert('Product created successfully');
+      }
+
+      handleDialogChange(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to save product';
+      alert(`Error: ${msg}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -125,7 +173,6 @@ export default function AdminProducts() {
 
   const handleDialogChange = (open: boolean) => {
     setIsDialogOpen(open);
-    // Reset form when dialog closes
     if (!open) {
       setFormData({
         name: '',
@@ -135,12 +182,22 @@ export default function AdminProducts() {
         quantity: '',
         availability: 'in-stock',
         description: '',
-        supplier: ''
+        supplier: '',
+        farm: '',
+        image: ''
       });
       setImagePreview('');
       setEditingProduct(null);
     }
   };
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading products...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -173,7 +230,7 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <Label htmlFor="category">Category *</Label>
-                  <Select value={formData.category} onValueChange={(value: string) => handleChange('category', value as Product['category'])}>
+                  <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -204,7 +261,7 @@ export default function AdminProducts() {
                     id="unit"
                     value={formData.unit}
                     onChange={(e) => handleChange('unit', e.target.value)}
-                    placeholder="e.g., kg, lb, head"
+                    placeholder="e.g., kg, lb"
                     required
                   />
                 </div>
@@ -220,19 +277,30 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="supplier">Supplier *</Label>
-                <Input
-                  id="supplier"
-                  value={formData.supplier}
-                  onChange={(e) => handleChange('supplier', e.target.value)}
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="supplier">Supplier *</Label>
+                  <Input
+                    id="supplier"
+                    value={formData.supplier}
+                    onChange={(e) => handleChange('supplier', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="farm">Farm *</Label>
+                  <Input
+                    id="farm"
+                    value={formData.farm}
+                    onChange={(e) => handleChange('farm', e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
                 <Label htmlFor="availability">Availability *</Label>
-                <Select value={formData.availability} onValueChange={(value: string) => handleChange('availability', value as Product['availability'])}>
+                <Select value={formData.availability} onValueChange={(value) => handleChange('availability', value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -245,7 +313,7 @@ export default function AdminProducts() {
               </div>
 
               <div>
-                <Label htmlFor="image">Product Image</Label>
+                <Label htmlFor="image">Product Image *</Label>
                 <Input
                   id="image"
                   type="file"
@@ -276,10 +344,10 @@ export default function AdminProducts() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="submit">
-                  {editingProduct ? 'Update Product' : 'Add Product'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : (editingProduct ? 'Update Product' : 'Add Product')}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => handleDialogChange(false)}>
+                <Button type="button" variant="outline" onClick={() => handleDialogChange(false)} disabled={isSubmitting}>
                   Cancel
                 </Button>
               </div>
@@ -293,7 +361,7 @@ export default function AdminProducts() {
           <h3 className="text-lg font-semibold text-gray-900">All Products ({products.length})</h3>
         </CardHeader>
         <CardContent>
-          <div className="overflow-visible">
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
@@ -307,7 +375,7 @@ export default function AdminProducts() {
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={product._id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
@@ -353,7 +421,7 @@ export default function AdminProducts() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(product.id)}
+                          onClick={() => handleDelete(product._id)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
