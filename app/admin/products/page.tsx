@@ -11,8 +11,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { getProducts, createProduct, updateProduct as updateProductAPI, deleteProduct as deleteProductAPI, Product } from '@/lib/api/products';
+import { useToast } from '@/components/ui/toast';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function AdminProducts() {
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -20,6 +23,10 @@ export default function AdminProducts() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; productId: string | null }>({
+    open: false,
+    productId: null,
+  });
   const [formData, setFormData] = useState<{
     name: string;
     category: Product['category'];
@@ -100,15 +107,21 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      try {
-        await deleteProductAPI(id);
-        setProducts(products.filter(p => p._id !== id));
-        alert('Product deleted successfully');
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Failed to delete product';
-        alert(`Error: ${msg}`);
-      }
+    setDeleteConfirm({ open: true, productId: id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm.productId) return;
+    
+    try {
+      await deleteProductAPI(deleteConfirm.productId);
+      setProducts(products.filter(p => p._id !== deleteConfirm.productId));
+      showToast('Product deleted successfully', 'success');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete product';
+      showToast(`Error: ${msg}`, 'error');
+    } finally {
+      setDeleteConfirm({ open: false, productId: null });
     }
   };
 
@@ -131,7 +144,7 @@ export default function AdminProducts() {
       setIsSubmitting(true);
       
       if (!formData.name || !formData.price || !formData.unit || !formData.quantity || !formData.supplier || !formData.farm || !formData.image) {
-        alert('Please fill in all required fields');
+        showToast('Please fill in all required fields', 'warning');
         return;
       }
 
@@ -151,17 +164,17 @@ export default function AdminProducts() {
       if (editingProduct) {
         const updated = await updateProductAPI(editingProduct._id, productData);
         setProducts(products.map(p => p._id === editingProduct._id ? updated : p));
-        alert('Product updated successfully');
+        showToast('Product updated successfully', 'success');
       } else {
         const created = await createProduct(productData);
         setProducts([...products, created]);
-        alert('Product created successfully');
+        showToast('Product created successfully', 'success');
       }
 
       handleDialogChange(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to save product';
-      alert(`Error: ${msg}`);
+      showToast(`Error: ${msg}`, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -435,6 +448,17 @@ export default function AdminProducts() {
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, productId: null })}
+        onConfirm={confirmDelete}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

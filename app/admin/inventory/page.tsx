@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { getProducts, updateStock, Product } from '@/lib/api/products';
+import { useToast } from '@/components/ui/toast';
 
 export default function AdminInventory() {
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [adjustQuantity, setAdjustQuantity] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -46,10 +48,10 @@ export default function AdminInventory() {
       
       setProducts(products.map(p => p._id === productId ? updated : p));
       setAdjustQuantity({ ...adjustQuantity, [productId]: '' });
-      alert('Stock updated successfully');
+      showToast('Stock updated successfully', 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to update stock';
-      alert(`Error: ${msg}`);
+      showToast(`Error: ${msg}`, 'error');
     } finally {
       setIsUpdating(false);
     }

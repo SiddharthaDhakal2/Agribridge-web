@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getAllOrders, updateOrderStatus, Order } from '@/lib/api/orders';
+import { useToast } from '@/components/ui/toast';
 
 export default function AdminOrders() {
+  const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -68,7 +70,7 @@ export default function AdminOrders() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to update order';
-      alert(`Error: ${msg}`);
+      showToast(`Error: ${msg}`, 'error');
     } finally {
       setIsUpdating(false);
     }
