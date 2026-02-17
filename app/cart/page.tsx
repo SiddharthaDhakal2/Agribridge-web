@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { createOrder } from "@/lib/api/orders";
+import { getProducts } from "@/lib/api/products";
 
 interface CartItem {
   id: string;
@@ -21,6 +24,8 @@ interface DeliveryInfo {
 }
 
 export default function CartPage() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -88,7 +93,7 @@ export default function CartPage() {
     );
   };
 
-  const deliveryFee = 5.0;
+  const deliveryFee = 120;
   const subtotal = calculateSubtotal();
   const total = subtotal + deliveryFee;
 
@@ -100,18 +105,40 @@ export default function CartPage() {
     address: "",
   });
 
+  const [errors, setErrors] = useState<Partial<DeliveryInfo>>({});
+
   // Load profile data when proceeding to checkout
   const handleProceedToCheckout = () => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("profileData");
-      if (saved) {
-        const profileData = JSON.parse(saved);
-        setDeliveryInfo({
-          name: profileData.name || "",
-          email: profileData.email || "",
-          phone: profileData.phone || "",
-          address: profileData.address || "",
-        });
+      const userCookie = localStorage.getItem("user");
+      const profileData = localStorage.getItem("profileData");
+      
+      if (userCookie) {
+        try {
+          const user = JSON.parse(userCookie);
+          setDeliveryInfo((prev) => ({
+            ...prev,
+            name: user.name || "",
+            email: user.email || "",
+          }));
+        } catch (err) {
+          console.error("Error parsing user cookie:", err);
+        }
+      }
+
+      if (profileData) {
+        try {
+          const data = JSON.parse(profileData);
+          setDeliveryInfo((prev) => ({
+            ...prev,
+            name: data.name || prev.name,
+            email: data.email || prev.email,
+            phone: data.phone || "",
+            address: data.address || "",
+          }));
+        } catch (err) {
+          console.error("Error parsing profile data:", err);
+        }
       }
     }
     setShowCheckout(true);
@@ -121,26 +148,125 @@ export default function CartPage() {
     field: keyof DeliveryInfo,
     value: string
   ) => {
-    setDeliveryInfo((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    // For phone field, only allow digits and limit to 10
+    if (field === "phone") {
+      const numericValue = value.replace(/\D/g, "");
+      if (numericValue.length <= 10) {
+        setDeliveryInfo((prev) => ({
+          ...prev,
+          [field]: numericValue,
+        }));
+        // Clear error when user types
+        if (errors[field]) {
+          setErrors((prev) => ({ ...prev, [field]: "" }));
+        }
+      }
+    } else {
+      setDeliveryInfo((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+      // Clear error when user types
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: "" }));
+      }
+    }
   };
 
-  const handleSubmitOrder = () => {
-    if (
-      deliveryInfo.name &&
-      deliveryInfo.email &&
-      deliveryInfo.phone &&
-      deliveryInfo.address
-    ) {
-      alert(
-        `Order placed successfully! \n\nDelivery to: ${deliveryInfo.name}`
-      );
+  const handleSubmitOrder = async () => {
+    // Validate all fields
+    const newErrors: Partial<DeliveryInfo> = {};
+
+    if (!deliveryInfo.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!deliveryInfo.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryInfo.email)) {
+      newErrors.email = "Invalid email address";
+    }
+
+    if (!deliveryInfo.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (deliveryInfo.phone.length !== 10) {
+      newErrors.phone = "Phone number must be exactly 10 digits";
+    }
+
+    if (!deliveryInfo.address.trim()) {
+      newErrors.address = "Delivery address is required";
+    }
+
+    if (cartItems.length === 0) {
+      alert("Your cart is empty");
+      return;
+    }
+
+    // If there are errors, show them and stop
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      // Validate stock availability before placing order
+      const products = await getProducts();
+      const productMap = new Map(products.map(p => [p._id, p]));
+
+      for (const item of cartItems) {
+        const product = productMap.get(item.id);
+        
+        if (!product) {
+          throw new Error(`Product not found: ${item.name}`);
+        }
+        
+        if (product.availability === "out-of-stock" || product.quantity === 0) {
+          throw new Error(`${product.name} is out of stock`);
+        }
+        
+        if (product.quantity < item.quantity) {
+          throw new Error(
+            `Insufficient stock for ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`
+          );
+        }
+      }
+
+      const orderItems = cartItems.map((item) => ({
+        productId: item.id,
+        name: item.name,
+        price: item.pricePerKg,
+        quantity: item.quantity,
+        total: item.pricePerKg * item.quantity,
+      }));
+
+      const orderData = {
+        items: orderItems,
+        total,
+        customerName: deliveryInfo.name,
+        customerEmail: deliveryInfo.email,
+        phone: deliveryInfo.phone,
+        address: deliveryInfo.address,
+      };
+
+      await createOrder(orderData);
+
+      // Clear cart after successful order
+      setCartItems([]);
+      persistCart([]);
       setShowCheckout(false);
       setDeliveryInfo({ name: "", email: "", phone: "", address: "" });
-    } else {
-      alert("Please fill in all delivery information fields.");
+      setErrors({});
+
+      alert("Order placed successfully!");
+      router.push("/orders");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to place order";
+      alert(`Error placing order: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -356,7 +482,7 @@ export default function CartPage() {
               {/* Phone Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-2">
-                  Phone Number
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -364,25 +490,32 @@ export default function CartPage() {
                   onChange={(e) =>
                     handleDeliveryInfoChange("phone", e.target.value)
                   }
-                  placeholder="Enter your phone number"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 bg-gray-50 text-gray-600"
+                  placeholder="Enter 10-digit phone number"
+                  maxLength={10}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 bg-gray-50 text-gray-600 ${errors.phone ? "border-red-500" : "border-gray-300"}`}
                 />
+                {errors.phone && (
+                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                )}
               </div>
 
               {/* Address Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-2">
-                  Delivery Address
+                  Delivery Address <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={deliveryInfo.address}
                   onChange={(e) =>
                     handleDeliveryInfoChange("address", e.target.value)
                   }
-                  placeholder="Enter your delivery address"
+                  placeholder="Enter your complete delivery address"
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 bg-gray-50 text-gray-600"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 bg-gray-50 text-gray-600 ${errors.address ? "border-red-500" : "border-gray-300"}`}
                 />
+                {errors.address && (
+                  <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+                )}
               </div>
             </div>
 
@@ -408,13 +541,15 @@ export default function CartPage() {
             <div className="space-y-3">
               <button
                 onClick={handleSubmitOrder}
-                className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hover:shadow-lg"
+                disabled={isSubmitting}
+                className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Place Order
+                {isSubmitting ? "Processing Order..." : "Place Order"}
               </button>
               <button
                 onClick={() => setShowCheckout(false)}
-                className="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition"
+                disabled={isSubmitting}
+                className="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
