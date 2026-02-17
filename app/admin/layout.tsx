@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, Warehouse, ShoppingBag, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, Warehouse, ShoppingBag, Users, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { handleLogout } from '@/lib/actions/auth-actions';
 
@@ -16,6 +16,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
 
   const isActive = (path: string) => {
+    if (path === '/admin') {
+      return pathname === '/admin';
+    }
     return pathname === path || pathname.startsWith(path + '/');
   };
 
@@ -31,6 +34,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: '/admin/products', label: 'Products', icon: Package },
     { path: '/admin/inventory', label: 'Inventory', icon: Warehouse },
     { path: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+    { path: '/admin/users', label: 'Users Information', icon: Users },
   ];
 
   return (
