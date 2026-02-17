@@ -3,13 +3,14 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RegisterData, registerSchema } from "../schema";
 import { handleRegister } from "@/lib/actions/auth-actions";
 
 export default function RegisterForm() {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const {
     register,
@@ -23,18 +24,26 @@ export default function RegisterForm() {
   const [pending, startTransition] = useTransition();
 
   const submit = async (values: RegisterData) => {
+    setErrorMessage(""); // Clear previous errors
     startTransition(async () => {
       const res = await handleRegister(values);
       if (res.success) {
         router.push("/login");
       } else {
-        alert(res.message);
+        setErrorMessage(res.message || "Registration failed. Please try again.");
       }
     });
   };
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3">
+          <p className="text-sm text-red-800">{errorMessage}</p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700" htmlFor="name">
           Name

@@ -3,13 +3,14 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LoginData, loginSchema } from "../schema";
 import { handleLogin } from "@/lib/actions/auth-actions";
 
 export default function LoginForm() {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const {
     register,
@@ -23,6 +24,7 @@ export default function LoginForm() {
   const [pending, startTransition] = useTransition();
 
   const submit = async (values: LoginData) => {
+    setErrorMessage(""); // Clear previous errors
     startTransition(async () => {
       const res = await handleLogin(values);
 
@@ -45,13 +47,20 @@ export default function LoginForm() {
           router.replace("/home"); 
         }
       } else {
-        alert(res.message);
+        setErrorMessage(res.message || "Invalid email or password");
       }
     });
   };
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3">
+          <p className="text-sm text-red-800">{errorMessage}</p>
+        </div>
+      )}
+
       {/* Email */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700" htmlFor="email">
