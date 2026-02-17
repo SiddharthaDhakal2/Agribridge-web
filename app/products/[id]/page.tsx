@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Header from "../../(navigation)/Header";
-import { products } from "../data";
+import { getProductById, Product } from "@/lib/api/products";
 
 type CartItem = {
 	id: string;
@@ -16,13 +16,6 @@ type CartItem = {
 	unit: string;
 	quantity: number;
 };
-
-const slugify = (value: string) =>
-	value
-		.toLowerCase()
-		.replace(/[^a-z0-9\s-]/g, "")
-		.trim()
-		.replace(/\s+/g, "-");
 
 const readCartItems = () => {
 	if (typeof window === "undefined") return [] as CartItem[];
@@ -42,28 +35,59 @@ const writeCartItems = (items: CartItem[]) => {
 
 export default function ProductDetailPage() {
 	const params = useParams<{ id: string }>();
-	const productId = decodeURIComponent(params?.id ?? "").trim().toLowerCase();
+	const productId = params?.id ?? "";
 
-	const product = useMemo(
-		() =>
-			products.find(
-				(item) => item.id.toLowerCase() === productId || slugify(item.name) === productId
-			),
-		[productId]
-	);
-
+	const [product, setProduct] = useState<Product | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 	const [quantity, setQuantity] = useState(1);
 	const [cartMessage, setCartMessage] = useState("");
 
-	if (!product) {
+	useEffect(() => {
+		const fetchProduct = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+				const data = await getProductById(decodeURIComponent(productId));
+				setProduct(data);
+				setQuantity(1);
+			} catch (err) {
+				const msg = err instanceof Error ? err.message : "Failed to fetch product";
+				setError(msg);
+				setProduct(null);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		if (productId) {
+			fetchProduct();
+		}
+	}, [productId]);
+
+	if (isLoading) {
 		return (
 			<>
 				<Header />
 				<main className="min-h-screen bg-linear-to-b from-[#f7f3ee] via-[#fbf8f3] to-[#efe9df] px-6 pb-12 pt-24 text-[#1f1f1f]">
 					<div className="mx-auto w-full max-w-3xl">
 						<div className="rounded-2xl border border-dashed border-[#d7cec1] bg-white/70 p-8 text-center">
-							<p className="text-sm text-[#6d6a63]">Product not found.</p>
-							<p className="mt-2 text-xs text-[#8a847a]">Requested ID: {params?.id ?? ""}</p>
+							<p className="text-sm text-[#6d6a63]">Loading product...</p>
+						</div>
+					</div>
+				</main>
+			</>
+		);
+	}
+
+	if (error || !product) {
+		return (
+			<>
+				<Header />
+				<main className="min-h-screen bg-linear-to-b from-[#f7f3ee] via-[#fbf8f3] to-[#efe9df] px-6 pb-12 pt-24 text-[#1f1f1f]">
+					<div className="mx-auto w-full max-w-3xl">
+						<div className="rounded-2xl border border-dashed border-[#d7cec1] bg-white/70 p-8 text-center">
+							<p className="text-sm text-[#6d6a63]">{error || "Product not found."}</p>
 							<Link href="/products" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#1f6b45]">
 								Back to catalog
 							</Link>
@@ -84,7 +108,7 @@ export default function ProductDetailPage() {
 
 	const handleAddToCart = () => {
 		const current = readCartItems();
-		const existing = current.find((item) => item.id === product.id);
+		const existing = current.find((item) => item.id === product._id);
 
 		if (existing) {
 			existing.quantity = Math.min(product.quantity, existing.quantity + quantity);
@@ -95,7 +119,7 @@ export default function ProductDetailPage() {
 		}
 
 		const nextItem: CartItem = {
-			id: product.id,
+			id: product._id,
 			name: product.name,
 			farm: product.farm,
 			image: product.image,
@@ -142,24 +166,31 @@ export default function ProductDetailPage() {
 							</div>
 							<p className="text-sm leading-relaxed text-[#4e4b46]">{product.description}</p>
 
-							<span className="w-fit rounded-full bg-[#1f6b45] px-3 py-1 text-xs font-semibold text-white">
-								{product.quantity} in stock
+							<span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold text-white ${
+								product.availability === "in-stock" ? "bg-[#1f6b45]" :
+								product.availability === "low-stock" ? "bg-[#d4a574]" :
+								"bg-[#a0616a]"
+							}`}>
+								{product.quantity === 0 ? "Out of Stock" :
+								product.availability === "low-stock" ? `Low Stock - ${product.quantity} ${product.unit} left` :
+								`${product.quantity} ${product.unit === 'kg' ? 'kg' : product.unit} in stock`}
 							</span>
 
 							<div className="mt-2 flex flex-wrap items-center gap-3">
 								<div className="flex items-center gap-4 rounded-lg border border-[#e1dacf] bg-white px-4 py-2 text-sm">
-									<button type="button" onClick={handleDecrease} className="text-lg text-[#3f3d37]">
+									<button type="button" onClick={handleDecrease} className="text-lg text-[#3f3d37]" disabled={product.availability === "out-of-stock"}>
 										-
 									</button>
 									<span className="min-w-6 text-center font-medium">{quantity}</span>
-									<button type="button" onClick={handleIncrease} className="text-lg text-[#3f3d37]">
+									<button type="button" onClick={handleIncrease} className="text-lg text-[#3f3d37]" disabled={product.availability === "out-of-stock" || quantity >= product.quantity}>
 										+
 									</button>
 								</div>
 								<button
 									type="button"
 									onClick={handleAddToCart}
-									className="inline-flex items-center gap-2 rounded-lg bg-[#1f6b45] px-6 py-2.5 text-sm font-semibold text-white"
+									disabled={product.availability === "out-of-stock"}
+									className="inline-flex items-center gap-2 rounded-lg bg-[#1f6b45] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									Add to Cart
 								</button>
