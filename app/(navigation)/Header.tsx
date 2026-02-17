@@ -5,10 +5,12 @@ import Image from "next/image";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { handleLogout as serverHandleLogout } from "@/lib/actions/auth-actions";
+import LogoutDialog from "@/components/LogoutDialog";
 
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -34,10 +36,15 @@ export default function Header() {
     };
   }, [pathname]);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = () => {
     startTransition(async () => {
       await serverHandleLogout();
       setIsLoggedIn(false);
+      setShowLogoutDialog(false);
       router.push("/login");
     });
   };
@@ -78,7 +85,7 @@ export default function Header() {
                 Profile
               </Link>
               <button
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
                 disabled={isPending}
                 className="text-gray-700 font-medium hover:text-green-700 transition cursor-pointer"
               >
@@ -98,6 +105,13 @@ export default function Header() {
         </nav>
 
       </div>
+      
+      <LogoutDialog 
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={handleLogoutConfirm}
+        isPending={isPending}
+      />
     </header>
   );
 }

@@ -6,6 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Package, Warehouse, ShoppingBag, Users, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { handleLogout } from '@/lib/actions/auth-actions';
+import { useState, useTransition } from 'react';
+import LogoutDialog from '@/components/LogoutDialog';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,6 +16,8 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const isActive = (path: string) => {
     if (path === '/admin') {
@@ -22,11 +26,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return pathname === path || pathname.startsWith(path + '/');
   };
 
-  const onLogout = async () => {
-    const result = await handleLogout();
-    if (result.success) {
-      router.push('/login');
-    }
+  const onLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const onLogoutConfirm = () => {
+    startTransition(async () => {
+      const result = await handleLogout();
+      if (result.success) {
+        setShowLogoutDialog(false);
+        router.push('/login');
+      }
+    });
   };
 
   const navItems = [
@@ -74,8 +85,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           <div className="absolute bottom-6 left-6 right-6">
             <Button 
-              onClick={onLogout}
+              onClick={onLogoutClick}
               variant="outline" 
+              disabled={isPending}
               className="w-full bg-green-100! border-green-700 text-green-900 hover:bg-green-800 hover:text-black"
             >
               <LogOut className="w-4 h-4 mr-2" />
@@ -103,6 +115,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </main>
         </div>
       </div>
+      
+      <LogoutDialog 
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={onLogoutConfirm}
+        isPending={isPending}
+      />
     </div>
   );
 }
