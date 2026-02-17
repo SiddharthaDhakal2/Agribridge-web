@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Header from "../(navigation)/Header";
-import { products } from "./data";
+import { getProducts, searchProducts, getProductsByCategory, Product } from "@/lib/api/products";
 
 const categories = [
 	{ label: "All", value: "all" },
@@ -16,18 +16,59 @@ const categories = [
 export default function ProductsPage() {
 	const [activeCategory, setActiveCategory] = useState<(typeof categories)[number]["value"]>("all");
 	const [searchTerm, setSearchTerm] = useState("");
+	const [allProducts, setAllProducts] = useState<Product[]>([]);
+	const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
-	const visibleProducts = useMemo(() => {
-		const needle = searchTerm.trim().toLowerCase();
-		return products.filter((product) => {
-			const categoryMatch = activeCategory === "all" || product.category === activeCategory;
-			const searchMatch =
-				needle.length === 0 ||
-				product.name.toLowerCase().includes(needle) ||
-				product.farm.toLowerCase().includes(needle);
-			return categoryMatch && searchMatch;
-		});
-	}, [activeCategory, searchTerm]);
+	useEffect(() => {
+		const fetchProducts = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+				const data = await getProducts();
+				setAllProducts(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Failed to fetch products");
+				setAllProducts([]);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchProducts();
+	}, []);
+
+	useEffect(() => {
+		const filterProducts = async () => {
+			try {
+				let results = allProducts;
+
+				// Apply search filter
+				if (searchTerm.trim()) {
+					results = results.filter((product) => {
+						const needle = searchTerm.trim().toLowerCase();
+						return (
+							product.name.toLowerCase().includes(needle) ||
+							product.farm.toLowerCase().includes(needle) ||
+							product.description.toLowerCase().includes(needle)
+						);
+					});
+				}
+
+				// Apply category filter
+				if (activeCategory !== "all") {
+					results = results.filter((product) => product.category === activeCategory);
+				}
+
+				setFilteredProducts(results);
+			} catch (err) {
+				console.error("Error filtering products:", err);
+			}
+		};
+
+		filterProducts();
+	}, [activeCategory, searchTerm, allProducts]);
 
 	return (
 		<>
@@ -86,44 +127,64 @@ export default function ProductsPage() {
 					</div>
 				</div>
 
-				<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-					{visibleProducts.map((product) => (
-						<Link key={product.id} href={`/products/${product.id}`} className="group">
-							<article className="overflow-hidden rounded-2xl border border-[#efe6da] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg">
-							<div className="relative h-44 bg-[#f1ede6]">
-								<Image
-									src={product.image}
-									alt={product.name}
-									fill
-									className="object-cover transition duration-300 group-hover:scale-105"
-								/>
-							</div>
-							<div className="flex flex-col gap-2 p-4">
-								<div className="flex items-start justify-between gap-3">
-									<div>
-										<h3 className="text-base font-semibold text-[#2b2a27]">{product.name}</h3>
-										<p className="text-xs text-[#7b756d]">{product.farm}</p>
-									</div>
-									<span className="rounded-full bg-[#1f6b45] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-										{product.status === "in-stock" ? "In Stock" : "Low Stock"}
-									</span>
-								</div>
-								<div className="flex items-baseline gap-2">
-									<span className="text-lg font-semibold text-[#1f6b45]">
-										Rs {product.price.toFixed(2)}
-									</span>
-									<span className="text-xs text-[#7b756d]">/ {product.unit}</span>
-								</div>
-							</div>
-							</article>
-						</Link>
-					))}
-				</div>
-
-				{visibleProducts.length === 0 && (
+				{isLoading && (
 					<div className="mt-10 rounded-2xl border border-dashed border-[#d7cec1] bg-white/70 p-8 text-center text-sm text-[#6d6a63]">
-						No products match your search. Try a different keyword.
+						Loading products...
 					</div>
+				)}
+
+				{error && (
+					<div className="mt-10 rounded-2xl border border-red-300 bg-red-50 p-8 text-center text-sm text-red-600">
+						{error}
+					</div>
+				)}
+
+				{!isLoading && !error && (
+					<>
+						<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+							{filteredProducts.map((product) => (
+								<Link key={product._id} href={`/products/${product._id}`} className="group">
+									<article className="overflow-hidden rounded-2xl border border-[#efe6da] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg">
+									<div className="relative h-44 bg-[#f1ede6]">
+										<Image
+											src={product.image}
+											alt={product.name}
+											fill
+											className="object-cover transition duration-300 group-hover:scale-105"
+										/>
+									</div>
+									<div className="flex flex-col gap-2 p-4">
+										<div className="flex items-start justify-between gap-3">
+											<div>
+												<h3 className="text-base font-semibold text-[#2b2a27]">{product.name}</h3>
+												<p className="text-xs text-[#7b756d]">{product.farm}</p>
+											</div>
+											<span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white ${
+												product.availability === "in-stock" ? "bg-[#1f6b45]" :
+												product.availability === "low-stock" ? "bg-[#d4a574]" :
+												"bg-[#a0616a]"
+											}`}>
+												{product.availability === "in-stock" ? "In Stock" : product.availability === "low-stock" ? "Low Stock" : "Out of Stock"}
+											</span>
+										</div>
+										<div className="flex items-baseline gap-2">
+											<span className="text-lg font-semibold text-[#1f6b45]">
+												Rs {product.price.toFixed(2)}
+											</span>
+											<span className="text-xs text-[#7b756d]">/ {product.unit}</span>
+										</div>
+									</div>
+									</article>
+								</Link>
+							))}
+						</div>
+
+						{filteredProducts.length === 0 && (
+							<div className="mt-10 rounded-2xl border border-dashed border-[#d7cec1] bg-white/70 p-8 text-center text-sm text-[#6d6a63]">
+								No products match your search. Try a different keyword.
+							</div>
+						)}
+					</>
 				)}
 			</div>
 			</main>
