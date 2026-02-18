@@ -3,7 +3,34 @@
 import { loginUser, registerUser } from "@/lib/api/auth";
 import { cookies } from "next/headers";
 
-export const handleRegister = async (formData: { name: string; email: string; password: string; confirmPassword: string }) => {
+type RegisterResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    _id: string;
+    name: string;
+    email: string;
+    role: "user" | "admin";
+    image?: string;
+  };
+};
+
+type LoginResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    _id: string;
+    name: string;
+    email: string;
+    role: "user" | "admin";
+    phone?: string;
+    address?: string;
+    image?: string;
+  };
+  token?: string;
+};
+
+export const handleRegister = async (formData: { name: string; email: string; password: string; confirmPassword: string }): Promise<RegisterResponse> => {
   try {
     const res = await registerUser(formData);
     return {
@@ -19,7 +46,7 @@ export const handleRegister = async (formData: { name: string; email: string; pa
   }
 };
 
-export const handleLogin = async (formData: { email: string; password: string }) => {
+export const handleLogin = async (formData: { email: string; password: string }): Promise<LoginResponse> => {
   try {
     const res = await loginUser(formData);
 

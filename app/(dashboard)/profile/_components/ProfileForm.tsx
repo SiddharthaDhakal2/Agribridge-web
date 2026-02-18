@@ -138,11 +138,21 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       
       // Update cookie with new data
       if (typeof window !== "undefined") {
+        const profileStorage = {
+          userId: response.data._id,
+          name: trimmedName,
+          email: trimmedEmail,
+          phone,
+          address,
+          image: response.data.image,
+        };
+
         document.cookie = `user=${JSON.stringify(response.data)}; path=/`;
         localStorage.setItem("user", JSON.stringify(response.data));
+        localStorage.setItem("profileData", JSON.stringify(profileStorage));
         localStorage.setItem(
-          "profileData",
-          JSON.stringify({ name, email, phone, address, image: response.data.image })
+          `profileData:${response.data._id}`,
+          JSON.stringify(profileStorage)
         );
       }
       

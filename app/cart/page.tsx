@@ -40,6 +40,19 @@ const getCartStorageKey = () => {
   return "cartItems:guest";
 };
 
+const getProfileStorageKey = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const rawUser = localStorage.getItem("user");
+    if (!rawUser) return null;
+    const user = JSON.parse(rawUser) as { _id?: string };
+    if (user._id) return `profileData:${user._id}`;
+  } catch {
+    return null;
+  }
+  return null;
+};
+
 const readStoredCartItems = () => {
   if (typeof window === "undefined") return [] as RawCartItem[];
   const readFromKey = (key: string) => {
@@ -157,31 +170,63 @@ export default function CartPage() {
   const handleProceedToCheckout = () => {
     if (typeof window !== "undefined") {
       const userCookie = localStorage.getItem("user");
-      const profileData = localStorage.getItem("profileData");
-      
+      let currentUser: { _id?: string; name?: string; email?: string } | null = null;
+
       if (userCookie) {
         try {
-          const user = JSON.parse(userCookie);
+          currentUser = JSON.parse(userCookie);
           setDeliveryInfo((prev) => ({
             ...prev,
-            name: user.name || "",
-            email: user.email || "",
+            name: currentUser?.name || "",
+            email: currentUser?.email || "",
           }));
         } catch (err) {
           console.error("Error parsing user cookie:", err);
         }
       }
 
-      if (profileData) {
+      const profileKey = getProfileStorageKey();
+      const profileDataRaw = profileKey ? localStorage.getItem(profileKey) : null;
+      const legacyProfileRaw = localStorage.getItem("profileData");
+
+      const applyProfileData = (data: {
+        userId?: string;
+        name?: string;
+        email?: string;
+        phone?: string;
+        address?: string;
+      }) => {
+        setDeliveryInfo((prev) => ({
+          ...prev,
+          name: data.name || prev.name,
+          email: data.email || prev.email,
+          phone: data.phone || "",
+          address: data.address || "",
+        }));
+      };
+
+      if (profileDataRaw) {
         try {
-          const data = JSON.parse(profileData);
-          setDeliveryInfo((prev) => ({
-            ...prev,
-            name: data.name || prev.name,
-            email: data.email || prev.email,
-            phone: data.phone || "",
-            address: data.address || "",
-          }));
+          const data = JSON.parse(profileDataRaw);
+          applyProfileData(data);
+        } catch (err) {
+          console.error("Error parsing profile data:", err);
+        }
+      } else if (legacyProfileRaw) {
+        try {
+          const data = JSON.parse(legacyProfileRaw);
+          const userIdMatch =
+            data.userId && currentUser?._id && data.userId === currentUser._id;
+          const emailMatch =
+            data.email && currentUser?.email && data.email === currentUser.email;
+
+          if (userIdMatch || emailMatch) {
+            applyProfileData(data);
+            if (profileKey) {
+              localStorage.setItem(profileKey, JSON.stringify(data));
+              localStorage.removeItem("profileData");
+            }
+          }
         } catch (err) {
           console.error("Error parsing profile data:", err);
         }

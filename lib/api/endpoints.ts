@@ -4,7 +4,10 @@ export const API = {
         REGISTER: "/api/auth/register",
         LOGIN: "/api/auth/login",
         UPDATE_PROFILE: "/api/auth/profile",
-        CHANGE_PASSWORD: "/api/auth/change-password"
+        CHANGE_PASSWORD: "/api/auth/change-password",
+        FORGOT_PASSWORD_SEND_OTP: "/api/auth/forgot-password/send-otp",
+        FORGOT_PASSWORD_VERIFY_OTP: "/api/auth/forgot-password/verify-otp",
+        FORGOT_PASSWORD_RESET: "/api/auth/forgot-password/reset-password"
     },
     PRODUCTS: {
         GET_ALL: "/api/products",
