@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +41,23 @@ export default function ForgotPasswordDialog({ isOpen, onClose }: ForgotPassword
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+
+  const formatCountdown = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  useEffect(() => {
+    if (step !== "otp" || remainingSeconds <= 0) return;
+
+    const timerId = window.setInterval(() => {
+      setRemainingSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [step, remainingSeconds]);
 
   const emailForm = useForm<EmailFormData>({
     resolver: zodResolver(emailSchema),
@@ -68,6 +85,7 @@ export default function ForgotPasswordDialog({ isOpen, onClose }: ForgotPassword
       setSuccessMessage(response.data.message || "OTP sent to your email");
       setStep("otp");
       otpForm.reset();
+      setRemainingSeconds(120);
     } catch (error: unknown) {
       const axiosError = error as AxiosError<{ message?: string }>;
       setErrorMessage(axiosError.response?.data?.message || "Failed to send OTP");
@@ -79,6 +97,12 @@ export default function ForgotPasswordDialog({ isOpen, onClose }: ForgotPassword
   const handleVerifyOtp = async (data: OtpFormData) => {
     setErrorMessage("");
     setSuccessMessage("");
+
+    if (remainingSeconds <= 0) {
+      setErrorMessage("OTP has expired. Please request a new one.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -93,6 +117,24 @@ export default function ForgotPasswordDialog({ isOpen, onClose }: ForgotPassword
     } catch (error: unknown) {
       const axiosError = error as AxiosError<{ message?: string }>;
       setErrorMessage(axiosError.response?.data?.message || "Failed to verify OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+    setLoading(true);
+
+    try {
+      const response = await axiosInstance.post("/api/auth/forgot-password/send-otp", { email });
+      setSuccessMessage(response.data.message || "OTP resent to your email");
+      otpForm.reset();
+      setRemainingSeconds(120);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      setErrorMessage(axiosError.response?.data?.message || "Failed to resend OTP");
     } finally {
       setLoading(false);
     }
@@ -194,6 +236,19 @@ export default function ForgotPasswordDialog({ isOpen, onClose }: ForgotPassword
                 <p className="text-xs text-red-600">{otpForm.formState.errors.otp.message}</p>
               )}
               <p className="text-xs text-gray-600">Check your email for the OTP code</p>
+              <p className="text-xs text-gray-600">
+                {remainingSeconds > 0
+                  ? `OTP expires in ${formatCountdown(remainingSeconds)}`
+                  : "OTP expired. Please go back and request a new one."}
+              </p>
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="text-xs font-semibold text-green-700 hover:text-green-800 disabled:opacity-60 disabled:cursor-not-allowed transition"
+              >
+                {loading ? "Resending..." : "Resend OTP"}
+              </button>
             </div>
 
             <div className="flex gap-3">
@@ -209,7 +264,7 @@ export default function ForgotPasswordDialog({ isOpen, onClose }: ForgotPassword
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || remainingSeconds <= 0}
                 className="flex-1 h-11 rounded-lg bg-green-700 text-white text-sm font-semibold hover:bg-green-800 disabled:opacity-60 disabled:cursor-not-allowed transition"
               >
                 {loading ? "Verifying..." : "Verify OTP"}
