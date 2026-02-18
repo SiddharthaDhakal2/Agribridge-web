@@ -34,6 +34,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     startTransition(async () => {
       const result = await handleLogout();
       if (result.success) {
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("profileData");
+          } catch (err) {
+            console.error("Error clearing auth storage:", err);
+          }
+        }
         setShowLogoutDialog(false);
         router.push('/login');
       }

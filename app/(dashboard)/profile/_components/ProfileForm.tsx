@@ -149,7 +149,6 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
         document.cookie = `user=${JSON.stringify(response.data)}; path=/`;
         localStorage.setItem("user", JSON.stringify(response.data));
-        localStorage.setItem("profileData", JSON.stringify(profileStorage));
         localStorage.setItem(
           `profileData:${response.data._id}`,
           JSON.stringify(profileStorage)

@@ -170,7 +170,13 @@ export default function CartPage() {
   const handleProceedToCheckout = () => {
     if (typeof window !== "undefined") {
       const userCookie = localStorage.getItem("user");
-      let currentUser: { _id?: string; name?: string; email?: string } | null = null;
+      let currentUser: {
+        _id?: string;
+        name?: string;
+        email?: string;
+        phone?: string;
+        address?: string;
+      } | null = null;
 
       if (userCookie) {
         try {
@@ -179,6 +185,8 @@ export default function CartPage() {
             ...prev,
             name: currentUser?.name || "",
             email: currentUser?.email || "",
+            phone: currentUser?.phone || prev.phone,
+            address: currentUser?.address || prev.address,
           }));
         } catch (err) {
           console.error("Error parsing user cookie:", err);
@@ -200,8 +208,8 @@ export default function CartPage() {
           ...prev,
           name: data.name || prev.name,
           email: data.email || prev.email,
-          phone: data.phone || "",
-          address: data.address || "",
+          phone: data.phone || prev.phone,
+          address: data.address || prev.address,
         }));
       };
 

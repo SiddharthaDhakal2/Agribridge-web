@@ -45,18 +45,9 @@ export default function Header() {
       await serverHandleLogout();
       if (typeof window !== "undefined") {
         try {
-          const rawUser = localStorage.getItem("user");
-          let userId: string | undefined;
-          if (rawUser) {
-            const parsed = JSON.parse(rawUser) as { _id?: string };
-            userId = parsed._id;
-          }
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           localStorage.removeItem("profileData");
-          if (userId) {
-            localStorage.removeItem(`profileData:${userId}`);
-          }
         } catch (err) {
           console.error("Error clearing auth storage:", err);
         }
