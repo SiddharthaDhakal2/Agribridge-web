@@ -127,40 +127,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Trust Section */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-linear-to-r from-green-600 to-emerald-600 rounded-3xl p-12 text-center text-white">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Join Thousands of Happy Customers</h2>
-            <p className="text-xl mb-8 text-green-50 max-w-2xl mx-auto">
-              Experience the difference of farm-fresh quality. Start your journey to healthier, 
-              tastier food today.
-            </p>
-            <div className="grid md:grid-cols-4 gap-8 mb-8">
-              <div>
-                <div className="text-4xl font-bold mb-2">500+</div>
-                <p className="text-green-100">Farmers</p>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-2">10K+</div>
-                <p className="text-green-100">Customers</p>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-2">50+</div>
-                <p className="text-green-100">Products</p>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-2">100%</div>
-                <p className="text-green-100">Organic</p>
-              </div>
-            </div>
-            <Link href="/register" className="inline-block bg-white text-green-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition shadow-lg">
-              Get Started Now
-            </Link>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }
