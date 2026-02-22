@@ -15,6 +15,10 @@ export interface Order {
   items: OrderItem[];
   total: number;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  paymentMethod?: "khalti" | "esewa";
+  paymentStatus: "unpaid" | "paid" | "failed";
+  paymentReference?: string;
+  paidAt?: string;
   customerName: string;
   customerEmail: string;
   phone: string;
