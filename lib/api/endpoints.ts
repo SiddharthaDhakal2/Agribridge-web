@@ -27,6 +27,10 @@ export const API = {
         UPDATE_STATUS: "/api/orders",
         DELETE: "/api/orders"
     },
+    PAYMENTS: {
+        KHALTI_INITIATE: "/api/payments/khalti/initiate",
+        KHALTI_VERIFY: "/api/payments/khalti/verify"
+    },
     ADMIN: {
         USERS: {
             GET_ALL: "/api/admin/users",
