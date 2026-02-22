@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { createOrder } from "@/lib/api/orders";
-import { getProducts } from "@/lib/api/products";
 import { useToast } from "@/components/ui/toast";
 
 interface CartItem {
@@ -92,7 +90,6 @@ interface DeliveryInfo {
 export default function CartPage() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
@@ -272,8 +269,7 @@ export default function CartPage() {
     }
   };
 
-  const handleSubmitOrder = async () => {
-    // Validate all fields
+  const validateDeliveryInfo = () => {
     const newErrors: Partial<DeliveryInfo> = {};
 
     if (!deliveryInfo.name.trim()) {
@@ -296,77 +292,57 @@ export default function CartPage() {
       newErrors.address = "Delivery address is required";
     }
 
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return false;
+    }
+
+    return true;
+  };
+
+  const buildOrderData = () => {
+    const orderItems = cartItems.map((item) => ({
+      productId: item.id,
+      name: item.name,
+      price: item.pricePerKg,
+      quantity: item.quantity,
+      total: item.pricePerKg * item.quantity,
+    }));
+
+    return {
+      items: orderItems,
+      total,
+      customerName: deliveryInfo.name,
+      customerEmail: deliveryInfo.email,
+      phone: deliveryInfo.phone,
+      address: deliveryInfo.address,
+    };
+  };
+
+  const handleShowPaymentOptions = () => {
     if (cartItems.length === 0) {
       showToast("Your cart is empty", "warning");
       return;
     }
 
-    // If there are errors, show them and stop
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (!validateDeliveryInfo()) {
       return;
     }
+    const orderData = buildOrderData();
+    const summary = { subtotal, deliveryFee, total };
 
-    try {
-      setIsSubmitting(true);
-
-      // Validate stock availability before placing order
-      const products = await getProducts();
-      const productMap = new Map(products.map(p => [p._id, p]));
-
-      for (const item of cartItems) {
-        const product = productMap.get(item.id);
-        
-        if (!product) {
-          throw new Error(`Product not found: ${item.name}`);
-        }
-        
-        if (product.availability === "out-of-stock" || product.quantity === 0) {
-          throw new Error(`${product.name} is out of stock`);
-        }
-        
-        if (product.quantity < item.quantity) {
-          throw new Error(
-            `Insufficient stock for ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`
-          );
-        }
-      }
-
-      const orderItems = cartItems.map((item) => ({
-        productId: item.id,
-        name: item.name,
-        price: item.pricePerKg,
-        quantity: item.quantity,
-        total: item.pricePerKg * item.quantity,
-      }));
-
-      const orderData = {
-        items: orderItems,
-        total,
-        customerName: deliveryInfo.name,
-        customerEmail: deliveryInfo.email,
-        phone: deliveryInfo.phone,
-        address: deliveryInfo.address,
-      };
-
-      await createOrder(orderData);
-
-      // Clear cart after successful order
-      setCartItems([]);
-      persistCart([]);
-      setShowCheckout(false);
-      setDeliveryInfo({ name: "", email: "", phone: "", address: "" });
-      setErrors({});
-
-      showToast("Order placed successfully!", "success");
-      router.push("/orders");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to place order";
-      showToast(`Error placing order: ${errorMessage}`, "error");
-    } finally {
-      setIsSubmitting(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pendingOrderData", JSON.stringify(orderData));
+      localStorage.setItem("pendingOrderSummary", JSON.stringify(summary));
     }
+
+    setShowCheckout(false);
+    router.push("/payment");
+  };
+
+  const handleCloseCheckout = () => {
+    setShowCheckout(false);
+    setErrors({});
   };
 
   return (
@@ -542,7 +518,7 @@ export default function CartPage() {
                 Delivery Information
               </h2>
               <button
-                onClick={() => setShowCheckout(false)}
+                onClick={handleCloseCheckout}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
               >
                 ×
@@ -639,16 +615,15 @@ export default function CartPage() {
             {/* Buttons */}
             <div className="space-y-3">
               <button
-                onClick={handleSubmitOrder}
-                disabled={isSubmitting}
-                className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={handleShowPaymentOptions}
+                className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hover:shadow-lg"
               >
-                {isSubmitting ? "Processing Order..." : "Place Order"}
+                Continue to Payment
               </button>
+
               <button
-                onClick={() => setShowCheckout(false)}
-                disabled={isSubmitting}
-                className="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={handleCloseCheckout}
+                className="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition"
               >
                 Cancel
               </button>
