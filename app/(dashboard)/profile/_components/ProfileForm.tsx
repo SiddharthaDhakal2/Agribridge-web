@@ -425,24 +425,26 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       {/* Change Password */}
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">Change Password</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Current Password
-            </label>
-            <Input
-              id="currentPassword"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full"
-            />
-            {currentPasswordError && (
-              <p className="text-sm text-red-600 mt-1">{currentPasswordError}</p>
-            )}
-          </div>
+        <form autoComplete="off" onSubmit={e => { e.preventDefault(); handleUpdatePassword(); }}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                Current Password
+              </label>
+              <Input
+                id="currentPassword"
+                name="oldPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full"
+                autoComplete="off"
+              />
+              {currentPasswordError && (
+                <p className="text-sm text-red-600 mt-1">{currentPasswordError}</p>
+              )}
+            </div>
 
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
@@ -479,7 +481,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
           </div>
 
           <Button 
-            onClick={handleUpdatePassword}
+            type="submit"
             disabled={isChangingPassword}
             className="bg-green-700 hover:bg-green-800 text-white disabled:opacity-50"
           >
@@ -492,7 +494,8 @@ export default function ProfileForm({ user }: ProfileFormProps) {
             </p>
           )}
         </div>
-      </div>
+      </form>
+    </div>
     </div>
   );
 }
