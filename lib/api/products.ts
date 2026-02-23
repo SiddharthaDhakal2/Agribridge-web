@@ -13,6 +13,8 @@ export interface Product {
   supplier: string;
   farm: string;
   availability: "in-stock" | "low-stock" | "out-of-stock";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GetProductsResponse {
@@ -102,10 +104,12 @@ export const getProductsByCategory = async (
 };
 
 export const createProduct = async (
-  data: Omit<Product, "_id">
+  data: FormData
 ): Promise<Product> => {
   try {
-    const res = await axiosInstance.post<GetProductResponse>("/api/products", data);
+    const res = await axiosInstance.post<GetProductResponse>("/api/products", data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return res.data.data;
   } catch (err: unknown) {
     let message = "Failed to create product";
@@ -120,14 +124,15 @@ export const createProduct = async (
   }
 };
 
-export const updateProduct = async (
+export const updateProductAPI = async (
   id: string,
-  data: Partial<Omit<Product, "_id">>
+  data: FormData
 ): Promise<Product> => {
   try {
     const res = await axiosInstance.put<GetProductResponse>(
       `/api/products/${id}`,
-      data
+      data,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
     return res.data.data;
   } catch (err: unknown) {
