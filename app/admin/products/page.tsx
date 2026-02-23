@@ -1,21 +1,41 @@
-'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Input, Label } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ImageWithFallback } from '@/components/ImageWithFallback';
-import { getProducts, createProduct, updateProduct as updateProductAPI, deleteProduct as deleteProductAPI, Product } from '@/lib/api/products';
-import { useToast } from '@/components/ui/toast';
-import ConfirmDialog from '@/components/ConfirmDialog';
+  'use client';
+
+  import { useState, useEffect } from 'react';
+  import { Plus, Edit, Trash2 } from 'lucide-react';
+  import { Button } from '@/components/ui/button';
+  import { Card, CardContent, CardHeader } from '@/components/ui/card';
+  import { Input, Label } from '@/components/ui/input';
+  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+  import { Textarea } from '@/components/ui/textarea';
+  import { Badge } from '@/components/ui/badge';
+  import { ImageWithFallback } from '@/components/ImageWithFallback';
+  import { getProducts, createProduct, updateProductAPI, deleteProduct as deleteProductAPI, Product } from '@/lib/api/products';
+  import { useToast } from '@/components/ui/toast';
+  import ConfirmDialog from '@/components/ConfirmDialog';
+  import { getImageUrl } from '@/lib/getImageUrl';
+
 
 export default function AdminProducts() {
   const { showToast } = useToast();
+    const handleAdd = () => {
+      setEditingProduct(null);
+      setImagePreview('');
+      setFormData({
+        name: '',
+        category: 'vegetables',
+        price: '',
+        unit: '',
+        quantity: '',
+        availability: 'in-stock',
+        description: '',
+        supplier: '',
+        farm: '',
+        image: ''
+      });
+      setIsDialogOpen(true);
+    };
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -37,7 +57,7 @@ export default function AdminProducts() {
     description: string;
     supplier: string;
     farm: string;
-    image: string;
+    image: string | File;
   }>({
     name: '',
     category: 'vegetables',
@@ -58,7 +78,9 @@ export default function AdminProducts() {
         setIsLoading(true);
         setError(null);
         const data = await getProducts();
-        setProducts(data);
+        // Sort by createdAt descending (latest first)
+        const sorted = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setProducts(sorted);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to load products';
         setError(msg);
@@ -66,27 +88,8 @@ export default function AdminProducts() {
         setIsLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
-
-  const handleAdd = () => {
-    setEditingProduct(null);
-    setImagePreview('');
-    setFormData({
-      name: '',
-      category: 'vegetables',
-      price: '',
-      unit: '',
-      quantity: '',
-      availability: 'in-stock',
-      description: '',
-      supplier: '',
-      farm: '',
-      image: ''
-    });
-    setIsDialogOpen(true);
-  };
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -128,46 +131,50 @@ export default function AdminProducts() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      setImagePreview(URL.createObjectURL(file));
+      setFormData(prev => ({ ...prev, image: file }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       setIsSubmitting(true);
-      
-      if (!formData.name || !formData.price || !formData.unit || !formData.quantity || !formData.supplier || !formData.farm || !formData.image) {
+      // Enforce image selection on add
+      if (!formData.name || !formData.price || !formData.unit || !formData.quantity || !formData.supplier || !formData.farm) {
         showToast('Please fill in all required fields', 'warning');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!editingProduct && !(formData.image instanceof File)) {
+        showToast('Please select an image for the product', 'warning');
+        setIsSubmitting(false);
         return;
       }
 
-      const productData = {
-        name: formData.name,
-        description: formData.description,
-        category: formData.category as 'vegetables' | 'fruits' | 'grains',
-        price: parseFloat(formData.price),
-        unit: formData.unit,
-        quantity: parseInt(formData.quantity),
-        image: formData.image,
-        supplier: formData.supplier,
-        farm: formData.farm,
-        availability: formData.availability as 'in-stock' | 'low-stock' | 'out-of-stock',
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('unit', formData.unit);
+      formDataToSend.append('quantity', formData.quantity);
+      formDataToSend.append('supplier', formData.supplier);
+      formDataToSend.append('farm', formData.farm);
+      formDataToSend.append('availability', formData.availability);
+      if (formData.image instanceof File) {
+        formDataToSend.append('image', formData.image);
+      }
 
       if (editingProduct) {
-        const updated = await updateProductAPI(editingProduct._id, productData);
-        setProducts(products.map(p => p._id === editingProduct._id ? updated : p));
+        await updateProductAPI(editingProduct._id, formDataToSend);
+        const freshProducts = await getProducts();
+        setProducts(freshProducts);
         showToast('Product updated successfully', 'success');
       } else {
-        const created = await createProduct(productData);
-        setProducts([...products, created]);
+        await createProduct(formDataToSend);
+        const freshProducts = await getProducts();
+        setProducts(freshProducts);
         showToast('Product created successfully', 'success');
       }
 
@@ -393,7 +400,7 @@ export default function AdminProducts() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
                           <ImageWithFallback
-                            src={product.image}
+                            src={getImageUrl(product.image) + (product.updatedAt ? `?v=${new Date(product.updatedAt).getTime()}` : '')}
                             alt={product.name}
                             className="w-full h-full object-cover"
                           />
