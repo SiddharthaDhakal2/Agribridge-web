@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 import Header from "../(navigation)/Header";
 import { getProducts, searchProducts, getProductsByCategory, Product } from "@/lib/api/products";
+import { getImageUrl } from '@/lib/getImageUrl';
 
 const categories = [
 	{ label: "All", value: "all" },
@@ -27,7 +28,9 @@ export default function ProductsPage() {
 				setIsLoading(true);
 				setError(null);
 				const data = await getProducts();
-				setAllProducts(data);
+				// Sort by createdAt descending (latest first)
+				const sorted = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+				setAllProducts(sorted);
 			} catch (err) {
 				setError(err instanceof Error ? err.message : "Failed to fetch products");
 				setAllProducts([]);
@@ -146,11 +149,12 @@ export default function ProductsPage() {
 								<Link key={product._id} href={`/products/${product._id}`} className="group">
 									<article className="overflow-hidden rounded-2xl border border-[#efe6da] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg">
 									<div className="relative h-44 bg-[#f1ede6]">
-										<Image
-											src={product.image}
+										{/* eslint-disable-next-line @next/next/no-img-element */}
+										<img
+											src={getImageUrl(product.image)}
 											alt={product.name}
-											fill
-											className="object-cover transition duration-300 group-hover:scale-105"
+											style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+											className="object-cover transition duration-300 group-hover:scale-105 w-full h-full rounded-t-2xl"
 										/>
 									</div>
 									<div className="flex flex-col gap-2 p-4">
