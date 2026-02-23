@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { getImageUrl } from '@/lib/getImageUrl';
 import { getProducts, updateStock, Product } from '@/lib/api/products';
 import { useToast } from '@/components/ui/toast';
 
@@ -24,7 +25,9 @@ export default function AdminInventory() {
         setIsLoading(true);
         setError(null);
         const data = await getProducts();
-        setProducts(data);
+        // Sort by createdAt descending (latest first)
+        const sorted = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setProducts(sorted);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to load products';
         setError(msg);
@@ -59,6 +62,7 @@ export default function AdminInventory() {
 
   const totalStock = products.reduce((sum, p) => sum + p.quantity, 0);
   const outOfStockCount = products.filter(p => p.availability === 'out-of-stock').length;
+  const lowStockCount = products.filter(p => p.availability === 'low-stock').length;
 
   if (isLoading) {
     return <div className="text-center py-8">Loading inventory...</div>;
@@ -76,7 +80,7 @@ export default function AdminInventory() {
       </div>
 
       {/* Inventory Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-3">
@@ -92,12 +96,24 @@ export default function AdminInventory() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">Low Stock</p>
+            <p className={`text-2xl font-bold ${lowStockCount > 0 ? 'text-yellow-600 animate-pulse' : 'text-gray-900'}`}>{lowStockCount}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
                 <TrendingDown className="w-6 h-6 text-red-600" />
               </div>
             </div>
             <p className="text-sm text-gray-600 mb-1">Out of Stock</p>
-            <p className="text-2xl font-bold text-gray-900">{outOfStockCount}</p>
+            <p className={`text-2xl font-bold ${outOfStockCount > 0 ? 'text-red-600 animate-pulse' : 'text-gray-900'}`}>{outOfStockCount}</p>
           </CardContent>
         </Card>
       </div>
@@ -126,7 +142,7 @@ export default function AdminInventory() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
                           <ImageWithFallback
-                            src={product.image}
+                            src={getImageUrl(product.image)}
                             alt={product.name}
                             className="w-full h-full object-cover"
                           />
