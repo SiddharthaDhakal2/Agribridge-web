@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Header from "../../(navigation)/Header";
 import { getProductById, Product } from "@/lib/api/products";
+import { getImageUrl } from '@/lib/getImageUrl';
 
 type CartItem = {
 	id: string;
@@ -173,7 +174,13 @@ export default function ProductDetailPage() {
 					<div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
 						<div className="overflow-hidden rounded-3xl bg-white shadow-lg">
 							<div className="relative aspect-4/3 w-full">
-								<Image src={product.image} alt={product.name} fill className="object-cover" />
+								{/* eslint-disable-next-line @next/next/no-img-element */}
+								<img
+									src={getImageUrl(product.image)}
+									alt={product.name}
+									style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '1.5rem' }}
+									className="object-cover w-full h-full"
+								/>
 							</div>
 						</div>
 
