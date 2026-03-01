@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
+import { getImageUrl } from "@/lib/getImageUrl";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 
 interface CartItem {
   id: string;
@@ -80,6 +81,16 @@ const readStoredCartItems = () => {
   return [] as RawCartItem[];
 };
 
+const toCartItems = (items: RawCartItem[]): CartItem[] =>
+  items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    supplier: item.farm,
+    image: getImageUrl(item.image),
+    pricePerKg: item.price,
+    quantity: item.quantity,
+  }));
+
 interface DeliveryInfo {
   name: string;
   email: string;
@@ -90,25 +101,13 @@ interface DeliveryInfo {
 export default function CartPage() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-
-  useEffect(() => {
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
-      const parsed = readStoredCartItems();
-      setCartItems(
-        parsed.map((item) => ({
-          id: item.id,
-          name: item.name,
-          supplier: item.farm,
-          image: item.image,
-          pricePerKg: item.price,
-          quantity: item.quantity,
-        }))
-      );
+      return toCartItems(readStoredCartItems());
     } catch {
-      setCartItems([]);
+      return [];
     }
-  }, []);
+  });
 
   const persistCart = (items: CartItem[]) => {
     window.localStorage.setItem(
@@ -389,11 +388,9 @@ export default function CartPage() {
                 >
                   {/* Product Image - Left */}
                   <div className="shrink-0">
-                    <Image
+                    <ImageWithFallback
                       src={item.image}
                       alt={item.name}
-                      width={100}
-                      height={100}
                       className="w-24 h-24 object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
