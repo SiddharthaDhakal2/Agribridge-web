@@ -14,6 +14,23 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
 
+  const isPathActive = (href: string) => {
+    if (href === "/home") {
+      return pathname === "/" || pathname === "/home";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  const getNavLinkClass = (href: string) => {
+    const baseClass =
+      "relative inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium transition";
+    const activeClass = "bg-green-100 text-green-800";
+    const inactiveClass = "text-gray-700 hover:bg-green-50 hover:text-green-700";
+
+    return `${baseClass} ${isPathActive(href) ? activeClass : inactiveClass}`;
+  };
+
   useEffect(() => {
     // Check if user is logged in by checking the role cookie
     const checkAuth = () => {
@@ -75,38 +92,38 @@ export default function Header() {
         </Link>
 
         {/* Navigation Links - Right Side */}
-        <nav className="flex items-center gap-6">
-          <Link href="/home" className="text-gray-700 font-medium hover:text-green-700 transition">
+        <nav className="flex items-center gap-2">
+          <Link href="/home" className={getNavLinkClass("/home")}>
             Home
           </Link>
-          <Link href="/about" className="text-gray-700 font-medium hover:text-green-700 transition">
+          <Link href="/about" className={getNavLinkClass("/about")}>
             About
           </Link>
           {isLoggedIn ? (
             <>
-              <Link href="/cart" className="text-gray-700 font-medium hover:text-green-700 transition">
+              <Link href="/cart" className={getNavLinkClass("/cart")}>
                 Cart
               </Link>
-              <Link href="/orders" className="text-gray-700 font-medium hover:text-green-700 transition">
+              <Link href="/orders" className={getNavLinkClass("/orders")}>
                 Orders
               </Link>
-              <Link href="/profile" className="text-gray-700 font-medium hover:text-green-700 transition">
+              <Link href="/profile" className={getNavLinkClass("/profile")}>
                 Profile
               </Link>
               <button
                 onClick={handleLogoutClick}
                 disabled={isPending}
-                className="text-gray-700 font-medium hover:text-green-700 transition cursor-pointer"
+                className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-green-50 hover:text-green-700 cursor-pointer"
               >
                 Logout
               </button>
             </>
           ) : (
             <>
-              <Link href="/register" className="text-gray-700 font-medium hover:text-green-700 transition">
+              <Link href="/register" className={getNavLinkClass("/register")}>
                 Signup
               </Link>
-              <Link href="/login" className="text-gray-700 font-medium hover:text-green-700 transition">
+              <Link href="/login" className={getNavLinkClass("/login")}>
                 Login
               </Link>
             </>
