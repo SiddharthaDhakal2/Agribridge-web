@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -136,19 +135,20 @@ export default function ProductDetailPage() {
 		const current = readCartItems();
 		const existing = current.find((item) => item.id === product._id);
 
-		if (existing) {
-			existing.quantity = Math.min(product.quantity, existing.quantity + quantity);
-			writeCartItems([...current]);
-			setCartMessage("Updated quantity in your cart.");
-			window.setTimeout(() => setCartMessage(""), 2000);
-			return;
-		}
+	if (existing) {
+		existing.quantity = Math.min(product.quantity, existing.quantity + quantity);
+		existing.image = getImageUrl(product.image);
+		writeCartItems([...current]);
+		setCartMessage("Updated quantity in your cart.");
+		window.setTimeout(() => setCartMessage(""), 2000);
+		return;
+	}
 
 		const nextItem: CartItem = {
 			id: product._id,
 			name: product.name,
 			farm: product.farm,
-			image: product.image,
+			image: getImageUrl(product.image),
 			price: product.price,
 			unit: product.unit,
 			quantity,
