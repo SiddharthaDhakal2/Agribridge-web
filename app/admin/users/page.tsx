@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { RotateCw } from 'lucide-react';
+import { RotateCw, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { AdminUser, getAdminUsers } from '@/lib/api/admin-users';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,26 @@ export default function AdminUsers() {
       return `${baseUrl}${image}`;
     };
   }, [baseUrl]);
+
+  const filteredUsers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) return users;
+
+    return users.filter((user) => {
+      const name = user.name?.toLowerCase() || '';
+      const email = user.email?.toLowerCase() || '';
+      const phone = user.phone?.toLowerCase() || '';
+      const address = user.address?.toLowerCase() || '';
+
+      return (
+        name.includes(query) ||
+        email.includes(query) ||
+        phone.includes(query) ||
+        address.includes(query)
+      );
+    });
+  }, [searchQuery, users]);
 
   const loadUsers = async () => {
     try {
@@ -83,7 +105,21 @@ export default function AdminUsers() {
 
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900">All Users ({users.length})</h3>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              All Users ({filteredUsers.length}{filteredUsers.length !== users.length ? ` of ${users.length}` : ''})
+            </h3>
+            <div className="relative w-full sm:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search name, email, phone, address..."
+                className="pl-9"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -97,7 +133,7 @@ export default function AdminUsers() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => {
+                {filteredUsers.map((user) => {
                   const displayImage = getImageUrl(user.image);
                   const avatarLetter = user.name?.charAt(0)?.toUpperCase() || 'U';
 
@@ -130,6 +166,13 @@ export default function AdminUsers() {
                     </tr>
                   );
                 })}
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-8 px-4 text-center text-sm text-gray-500">
+                      No users match your search.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
