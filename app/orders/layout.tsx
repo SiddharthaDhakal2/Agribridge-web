@@ -1,4 +1,5 @@
 import Header from "@/app/(navigation)/Header";
+import Footer from "@/components/Footer";
 
 export default function OrdersLayout({
   children,
@@ -8,7 +9,8 @@ export default function OrdersLayout({
   return (
     <>
       <Header />
-      <main className="pt-14">{children}</main>
+      <main className="pt-14 min-h-screen bg-white">{children}</main>
+      <Footer />
     </>
   );
 }
