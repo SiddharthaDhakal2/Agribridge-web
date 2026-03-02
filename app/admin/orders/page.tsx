@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Eye, RotateCw } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,19 +17,15 @@ export default function AdminOrders() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchOrders = async () => {
     try {
-      setIsRefreshing(true);
       setError(null);
       const data = await getAllOrders();
       setOrders(data);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load orders';
       setError(msg);
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -99,20 +95,11 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div>
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Order Management</h2>
           <p className="text-gray-600">View and manage customer orders</p>
         </div>
-        <Button
-          onClick={() => fetchOrders()}
-          disabled={isRefreshing}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
-        </Button>
       </div>
 
       {/* Order Stats */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Eye, RotateCw, Search } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,6 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [userOrders, setUserOrders] = useState<Order[]>([]);
@@ -78,20 +77,6 @@ export default function AdminUsers() {
     return `Rs ${formatted}`;
   };
 
-  const loadUsers = async () => {
-    try {
-      setIsRefreshing(true);
-      setError(null);
-      const data = await getAdminUsers();
-      setUsers(data);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to load users';
-      setError(msg);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   const handleViewOrders = async (user: AdminUser) => {
     setSelectedUser(user);
     setIsOrdersDialogOpen(true);
@@ -144,19 +129,10 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div>
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Users Information</h2>
         </div>
-        <Button
-          onClick={loadUsers}
-          disabled={isRefreshing}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
-        </Button>
       </div>
 
       <Card>
