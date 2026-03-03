@@ -450,7 +450,7 @@ export default function CartPage() {
                     </button>
 
                     {/* Prices */}
-                    <div className="text-right pb-2 border-b border-gray-100">
+                    <div className="text-right pb-2">
                       <p className="text-gray-600 text-sm mb-2">
                         Rs {item.pricePerKg.toFixed(2)} / kg
                       </p>
@@ -510,16 +510,10 @@ export default function CartPage() {
       {showCheckout && (
         <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
                 Delivery Information
               </h2>
-              <button
-                onClick={handleCloseCheckout}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
             </div>
 
             <div className="space-y-4 mb-6">

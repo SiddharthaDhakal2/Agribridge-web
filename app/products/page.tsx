@@ -79,7 +79,7 @@ export default function ProductsPage() {
 			<main className="min-h-screen bg-linear-to-b from-[#f7f3ee] via-[#fbf8f3] to-[#efe9df] px-6 pb-10 pt-24 text-[#1f1f1f]">
 				<div className="mx-auto w-full max-w-6xl">
 				<div className="mb-8">
-					<h1 className="text-3xl md:text-4xl font-serif font-semibold">Product Catalog</h1>
+					<h1 className="text-3xl md:text-4xl font-bold text-gray-900">Product Catalog</h1>
 				</div>
 
 				<div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
