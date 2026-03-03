@@ -13,7 +13,7 @@ interface LogoutDialogProps {
 export default function LogoutDialog({ open, onOpenChange, onConfirm, isPending }: LogoutDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Confirm Logout</DialogTitle>
         </DialogHeader>

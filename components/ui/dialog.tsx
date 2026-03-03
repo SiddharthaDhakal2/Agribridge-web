@@ -58,10 +58,12 @@ export function DialogTrigger({
 
 export function DialogContent({
   children,
-  className = ''
+  className = '',
+  showCloseButton = true
 }: {
   children: React.ReactNode;
   className?: string;
+  showCloseButton?: boolean;
 }) {
   const context = React.useContext(DialogContext);
 
@@ -93,12 +95,14 @@ export function DialogContent({
           className={`relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto ${className}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            onClick={() => context.setOpen(false)}
-            className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-lg z-10"
-          >
-            <X className="w-5 h-5 text-gray-900" />
-          </button>
+          {showCloseButton && (
+            <button
+              onClick={() => context.setOpen(false)}
+              className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-lg z-10"
+            >
+              <X className="w-5 h-5 text-gray-900" />
+            </button>
+          )}
           {children}
         </div>
       </div>
